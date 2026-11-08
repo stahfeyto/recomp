@@ -18,6 +18,11 @@ import "./_painel/painel.css";
 
 export const metadata: Metadata = { title: "Painel · RECOMP" };
 
+/** O valor do início só interessa se for de um registo diferente do atual. */
+function sinceStart(s: { current: { date: string }; first: { value: number; date: string } } | null) {
+  return s && s.first.date !== s.current.date ? s.first.value : null;
+}
+
 export default function PainelPage() {
   return (
     <Suspense fallback={<PainelSkeleton />}>
@@ -44,7 +49,7 @@ async function Painel() {
           unit="cm"
           toneKey="waistCm"
           previous={d.waist?.previous?.value}
-          first={d.waist?.first.value}
+          first={sinceStart(d.waist)}
         >
           <Sparkline id="waist" label="Cintura nas últimas 8 semanas" unit="cm" points={d.waistSpark} />
         </KpiCard>
@@ -88,7 +93,7 @@ async function Painel() {
           unit="cm"
           toneKey="armRightCm"
           previous={d.arm?.previous?.value}
-          first={d.arm?.first.value}
+          first={sinceStart(d.arm)}
           note={
             d.armSides
               ? `D ${formatDecimal(d.armSides.right)} · E ${formatDecimal(d.armSides.left)} · diferença ${formatDecimal(Math.abs(d.armSides.right - d.armSides.left))} cm`
@@ -102,7 +107,7 @@ async function Painel() {
           unit="cm"
           toneKey="chestCm"
           previous={d.chest?.previous?.value}
-          first={d.chest?.first.value}
+          first={sinceStart(d.chest)}
         />
         <KpiCard
           className="bento__shoulders"
@@ -111,7 +116,7 @@ async function Painel() {
           unit="cm"
           toneKey="shouldersCm"
           previous={d.shoulders?.previous?.value}
-          first={d.shoulders?.first.value}
+          first={sinceStart(d.shoulders)}
         />
 
         <Card className="bento__ratio kpi">

@@ -73,7 +73,8 @@ export async function getDashboardData() {
           current: weightMeasured.current.value,
           count: 0,
           previous: weightMeasured.previous?.value ?? null,
-          first: weightMeasured.first.value,
+          // Com um só registo, "desde o início" seria sempre 0.
+          first: weightMeasured.first.date !== weightMeasured.current.date ? weightMeasured.first.value : null,
         }
       : null;
 
