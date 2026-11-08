@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Perfis do Chrome e capturas das verificações locais.
+    ".taste-skill/**",
+    "shots/**",
   ]),
 ]);
 
