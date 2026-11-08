@@ -15,6 +15,7 @@ import { MacroRings } from "./_painel/macro-rings";
 import { RatioMeter } from "./_painel/ratio-meter";
 import { Sparkline } from "./_painel/sparkline";
 import "./_painel/painel.css";
+import { TypeBadge } from "./treino/training-types";
 
 export const metadata: Metadata = { title: "Painel · RECOMP" };
 
@@ -243,9 +244,7 @@ function TodayTraining({ d }: { d: DashboardData }) {
         <>
           <div className="flex flex-wrap items-center gap-3">
             <h2 className="text-2xl">{t.title}</h2>
-            <span className="type-badge" data-tone={type.tone}>
-              {type.label}
-            </span>
+            <TypeBadge type={t.type} />
           </div>
           {t.notes && <p className="text-ice-300">{t.notes}</p>}
           {t.exercises.length > 0 ? (

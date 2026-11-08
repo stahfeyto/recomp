@@ -1,18 +1,8 @@
 "use client";
 
 import { useInView, useReducedMotion } from "motion/react";
-import { useRef, useSyncExternalStore, type ReactNode } from "react";
-
-const noopSubscribe = () => () => {};
-
-/** false no servidor e durante a hidratação; true depois. */
-function useHydrated(): boolean {
-  return useSyncExternalStore(
-    noopSubscribe,
-    () => true,
-    () => false,
-  );
-}
+import { useRef, type ReactNode } from "react";
+import { useHydrated } from "@/lib/use-hydrated";
 
 /**
  * Reserva a altura do gráfico e só o monta quando entra no ecrã, para a linha se

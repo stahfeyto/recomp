@@ -1,0 +1,413 @@
+/* /treino: faixa/grelha da semana, cartões dos dias, modal de edição, lista ordenável. */
+
+/* ---------------------------------------------------------- atalhos */
+
+.week-chips {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 12px;
+  border-radius: var(--r-md);
+  background: var(--field-bg);
+  border: 1px solid rgb(220 230 255 / 0.16);
+}
+
+.week-chips__btn {
+  position: relative;
+  min-height: 44px;
+  border-radius: var(--r-sm);
+  color: var(--ice-300);
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color var(--m-out) var(--ease), color var(--m-out) var(--ease);
+}
+
+.week-chips__btn[aria-current="true"] {
+  background: rgb(27 44 255 / 0.4);
+  color: var(--ice-100);
+  box-shadow: inset 0 0 0 1px rgb(75 99 255 / 0.6);
+}
+
+.week-chips__btn[data-today]::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 6px;
+  width: 4px;
+  height: 4px;
+  margin-left: -2px;
+  border-radius: 50%;
+  background: var(--acid-400);
+}
+
+/* Desktop: os atalhos não são precisos (a semana inteira está à vista). */
+@media (min-width: 1024px) {
+  .week-chips {
+    display: none;
+  }
+}
+
+/* ------------------------------------------------------- semana */
+
+.week {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+  margin-inline: calc(var(--gutter) * -1);
+  padding: 4px var(--gutter) 16px;
+  scroll-padding-inline: var(--gutter);
+  scrollbar-width: none;
+}
+
+.week::-webkit-scrollbar {
+  display: none;
+}
+
+.week > * {
+  flex: 0 0 min(86%, 360px);
+  scroll-snap-align: start;
+}
+
+@media (min-width: 768px) {
+  .week > * {
+    flex-basis: min(46%, 360px);
+  }
+}
+
+@media (min-width: 1024px) {
+  .week {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 16px;
+    overflow: visible;
+    margin-inline: 0;
+    padding: 0;
+  }
+}
+
+/* ------------------------------------------------------- cartão do dia */
+
+.day-card {
+  display: flex;
+  min-height: 280px;
+}
+
+.day-card--today {
+  box-shadow:
+    inset 0 0 0 1px rgb(215 255 58 / 0.45),
+    0 0 40px -12px rgb(215 255 58 / 0.35),
+    0 24px 60px -24px rgb(0 0 0 / 0.65);
+}
+
+.day-card__btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 18px 18px 20px;
+  border-radius: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 180ms var(--ease);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .day-card__btn:hover {
+    transform: translateY(-2px);
+  }
+}
+
+.day-card__btn:focus-visible {
+  outline: 2px solid var(--ice-100);
+  outline-offset: -2px;
+}
+
+.day-card__top {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.day-card__today {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: rgb(215 255 58 / 0.14);
+  color: var(--acid-400);
+}
+
+.day-card__title {
+  font-size: 1.375rem;
+}
+
+.day-card__list {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  margin-top: 4px;
+  font-size: 0.875rem;
+}
+
+.day-card__list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.day-card__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+  color: var(--ice-300);
+  font-size: 0.8125rem;
+}
+
+.day-card__meta svg {
+  width: 14px;
+  height: 14px;
+  color: var(--acid-400);
+}
+
+.day-card__empty {
+  margin-top: auto;
+  font-size: 0.875rem;
+  color: var(--ice-300);
+}
+
+/* --------------------------------------------------------------- modal */
+
+.lmodal__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  background: rgb(5 6 13 / 0.65);
+  backdrop-filter: blur(6px);
+}
+
+.lmodal {
+  position: fixed;
+  z-index: 71;
+  inset: 6dvh 0 0 0;
+  overflow: hidden;
+  border-radius: var(--r-xl) var(--r-xl) 0 0;
+  background: rgb(10 13 31 / 0.97);
+}
+
+.lmodal__content {
+  height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+@media (min-width: 768px) {
+  .lmodal {
+    inset: 6dvh 0 auto 0;
+    margin-inline: auto;
+    width: min(720px, calc(100vw - 48px));
+    max-height: 88dvh;
+    border-radius: var(--r-xl);
+  }
+  .lmodal__content {
+    max-height: 88dvh;
+  }
+}
+
+/* ------------------------------------------------------- editor do dia */
+
+.day-editor {
+  display: grid;
+  gap: 8px;
+  padding: 18px var(--gutter) calc(32px + env(safe-area-inset-bottom));
+}
+
+@media (min-width: 768px) {
+  .day-editor {
+    padding: 24px 28px 28px;
+  }
+}
+
+.day-editor__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.day-editor__section {
+  display: grid;
+  gap: 14px;
+  padding-block: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.day-editor__add {
+  padding-bottom: 0;
+}
+
+/* Escolha do tipo de dia */
+.type-picker {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+@media (min-width: 640px) {
+  .type-picker {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.type-picker label {
+  position: relative;
+}
+
+.type-picker input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.type-picker span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 10px;
+  border-radius: var(--r-sm);
+  border: 1px solid rgb(220 230 255 / 0.16);
+  background: var(--field-bg);
+  color: var(--ice-300);
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background-color var(--m-out) var(--ease), color var(--m-out) var(--ease);
+}
+
+.type-picker svg {
+  width: 16px;
+  height: 16px;
+}
+
+.type-picker input:checked + span {
+  color: var(--ice-100);
+  background: rgb(27 44 255 / 0.35);
+  border-color: rgb(75 99 255 / 0.7);
+}
+
+.type-picker input:focus-visible + span {
+  outline: 2px solid var(--ice-100);
+  outline-offset: 2px;
+}
+
+/* ------------------------------------------------- formulário de exercício */
+
+.exercise-form {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.exercise-form__name,
+.exercise-form__notes,
+.exercise-form__failure,
+.exercise-form__actions {
+  grid-column: 1 / -1;
+}
+
+.exercise-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* ---------------------------------------------------------- lista ordenável */
+
+.sortable {
+  display: grid;
+  gap: 8px;
+}
+
+.sortable__item {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 8px 8px 8px 4px;
+  border-radius: var(--r-md);
+  background: rgb(220 230 255 / 0.04);
+  border: 1px solid var(--line);
+}
+
+.sortable__item[data-dragging] {
+  z-index: 2;
+  background: var(--ink-800);
+  border-color: rgb(75 99 255 / 0.6);
+  box-shadow: 0 16px 40px -12px rgb(0 0 0 / 0.7);
+}
+
+.sortable__handle {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  min-height: 44px;
+  flex: none;
+  border-radius: var(--r-sm);
+  color: var(--ice-300);
+  cursor: grab;
+  touch-action: none;
+}
+
+.sortable__handle:active {
+  cursor: grabbing;
+}
+
+.sortable__handle svg {
+  width: 18px;
+  height: 18px;
+}
+
+.sortable__row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.sortable__body {
+  flex: 1;
+  min-width: 0;
+  padding-block: 4px;
+}
+
+.failure-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 8px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  vertical-align: 2px;
+  background: rgb(215 255 58 / 0.12);
+  color: var(--acid-400);
+}
+
+.failure-tag svg {
+  width: 12px;
+  height: 12px;
+}
