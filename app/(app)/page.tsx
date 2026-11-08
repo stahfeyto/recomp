@@ -217,9 +217,15 @@ function CheckInCard({ d }: { d: DashboardData }) {
           </li>
         </ul>
       </div>
-      <ButtonLink href="/medidas" variant="secondary" className="justify-self-start">
-        Registar medidas <ArrowRight />
-      </ButtonLink>
+      {c && c.daysLeft <= 0 ? (
+        <ButtonLink href="/metas" variant="acid" className="justify-self-start">
+          Ver recomendação <ArrowRight />
+        </ButtonLink>
+      ) : (
+        <ButtonLink href="/medidas" variant="secondary" className="justify-self-start">
+          Registar medidas <ArrowRight />
+        </ButtonLink>
+      )}
     </Card>
   );
 }
