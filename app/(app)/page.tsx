@@ -16,6 +16,7 @@ import { RatioMeter } from "./_painel/ratio-meter";
 import { Sparkline } from "./_painel/sparkline";
 import "./_painel/painel.css";
 import { TypeBadge } from "./treino/training-types";
+import { Scene3D } from "@/components/3d/scene-3d";
 
 export const metadata: Metadata = { title: "Painel · RECOMP" };
 
@@ -38,7 +39,11 @@ async function Painel() {
 
   return (
     <div className="stagger">
-      <PageHeader eyebrow={formatDateWeekday(d.today)} title={`${d.greeting}, ${d.name}`} />
+      <PageHeader
+        eyebrow={formatDateWeekday(d.today)}
+        title={`${d.greeting}, ${d.name}`}
+        actions={<Scene3D variant="orb" />}
+      />
 
       <div className="bento">
         {/* Cintura: a medida que decide */}

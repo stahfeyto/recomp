@@ -1,7 +1,6 @@
 "use server";
 
 import { headers } from "next/headers";
-import { redirect } from "next/navigation";
 import { z } from "zod";
 import {
   checkCredentials,
@@ -17,6 +16,11 @@ export type LoginState = {
   attempt: number;
   /** Devolvido para o campo não ficar vazio depois de uma falha. */
   username: string;
+  /**
+   * Sessão criada: para onde ir. O cliente toca a transição ("a luz abre o ecrã")
+   * e só depois navega (por isso não se usa redirect() aqui).
+   */
+  redirectTo?: string;
 };
 
 const schema = z.object({
@@ -90,6 +94,10 @@ export async function login(
     return fail("Não foi possível iniciar sessão. Tenta de novo daqui a pouco.");
   }
 
-  // Fora do try: o redirect() funciona lançando uma exceção.
-  redirect(safeRedirect(parsed.data.from));
+  return {
+    error: null,
+    attempt: prev.attempt,
+    username: "",
+    redirectTo: safeRedirect(parsed.data.from),
+  };
 }

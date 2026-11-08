@@ -17,6 +17,14 @@ export const metadata: Metadata = {
   title: "RECOMP",
   description: "Tracker pessoal de recomposição corporal.",
   robots: { index: false, follow: false },
+  applicationName: "RECOMP",
+  icons: {
+    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+  },
+  // Aberta a partir do ecrã principal do iPhone: ecrã inteiro, barra de estado escura.
+  appleWebApp: { capable: true, title: "RECOMP", statusBarStyle: "black-translucent" },
+  formatDetection: { telephone: false },
 };
 
 export const viewport: Viewport = {

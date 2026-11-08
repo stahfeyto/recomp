@@ -406,3 +406,9 @@
     padding-bottom: 64px;
   }
 }
+
+.app-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

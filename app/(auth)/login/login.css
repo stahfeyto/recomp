@@ -67,6 +67,20 @@
   letter-spacing: 0.22em;
   margin-right: -0.22em; /* compensa o espaçamento da última letra */
   line-height: 1;
+  /* legível por cima do cromado claro da cena 3D */
+  text-shadow:
+    0 2px 24px rgb(5 6 13 / 0.85),
+    0 0 3px rgb(5 6 13 / 0.6);
+}
+
+/* Pequeno fundo em vidro: legível por cima de qualquer zona da cena 3D. */
+.login-lead {
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgb(5 6 13 / 0.6);
+  backdrop-filter: blur(8px);
+  color: var(--ice-100);
+  font-size: 0.9375rem;
 }
 
 .login-lead {

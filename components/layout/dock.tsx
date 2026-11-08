@@ -11,18 +11,22 @@ import { NAV_ITEMS, isActive } from "./nav-items";
  */
 export function Dock() {
   const pathname = usePathname();
+  const currentIndex = NAV_ITEMS.findIndex((i) => isActive(pathname, i.href));
 
   return (
     <nav className="dock glass glass--strong" aria-label="Navegação principal">
       <ul className="dock__list">
-        {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+        {NAV_ITEMS.map(({ href, label, icon: Icon }, index) => {
           const active = isActive(pathname, href);
+          // Direção da transição de página: item à direita = avançar, à esquerda = recuar.
+          const direction = index > currentIndex ? "nav-forward" : "nav-back";
           return (
             <li key={href} className="dock__item">
               <Link
                 href={href}
                 className="dock__link"
                 aria-current={active ? "page" : undefined}
+                transitionTypes={active ? undefined : [direction]}
               >
                 {active && (
                   <motion.span

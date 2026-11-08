@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Checkbox, TextField } from "@/components/ui/field";
 import { login, type LoginState } from "./actions";
@@ -18,11 +18,47 @@ const SHAKE: Keyframe[] = [
   { transform: "translateX(0)" },
 ];
 
+/**
+ * Transição depois do login: um círculo de luz azul nasce no cartão e enche o ecrã.
+ * No Painel, o LoginReveal "abre" essa luz do centro para fora.
+ */
+async function playEnterLight(from: HTMLElement | null): Promise<void> {
+  if (!from || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const r = from.getBoundingClientRect();
+  const light = document.createElement("div");
+  light.className = "login-light";
+  light.style.left = `${r.left + r.width / 2}px`;
+  light.style.top = `${r.top + r.height / 2}px`;
+  document.body.appendChild(light);
+  const cover = (Math.hypot(window.innerWidth, window.innerHeight) / 40) * 1.2;
+  await light.animate(
+    [
+      { transform: "translate(-50%, -50%) scale(0.2)", opacity: 0 },
+      { transform: "translate(-50%, -50%) scale(2)", opacity: 1, offset: 0.25 },
+      { transform: `translate(-50%, -50%) scale(${cover})`, opacity: 1 },
+    ],
+    { duration: 700, easing: "cubic-bezier(0.65, 0, 0.35, 1)", fill: "forwards" },
+  ).finished;
+}
+
 export function LoginForm() {
   const from = useSearchParams().get("from") ?? "";
-  const [state, action, pending] = useActionState(login, initial);
+  const router = useRouter();
   const cardRef = useRef<HTMLFormElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
+  const [state, action, pending] = useActionState(async (prev: LoginState, fd: FormData) => {
+    const res = await login(prev, fd);
+    if (res.redirectTo) {
+      await playEnterLight(cardRef.current);
+      try {
+        sessionStorage.setItem("recomp:entered", "1");
+      } catch {
+        // sem sessionStorage: o Painel aparece sem a transição
+      }
+      router.replace(res.redirectTo);
+    }
+    return res;
+  }, initial);
 
   // A cada falha: o cartão abana e o foco volta à palavra-passe.
   useEffect(() => {
