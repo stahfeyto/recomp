@@ -204,3 +204,28 @@ export function weightWeeks(
     previous: weeklyAverage(weights, shiftISODate(today, -7)),
   };
 }
+
+/* ---------------------------------------------------------------- evolução */
+
+/** Média móvel de 7 dias (a pesagem do dia e as dos 6 dias anteriores que existirem). */
+export function movingAverage7(
+  weights: ReadonlyArray<DailyWeightLike>,
+): Array<{ date: string; average: number; count: number }> {
+  const sorted = [...weights].sort((a, b) => (a.date < b.date ? -1 : 1));
+  return sorted.map((w) => {
+    const start = shiftISODate(w.date, -6);
+    const win = sorted.filter((x) => x.date >= start && x.date <= w.date);
+    const avg = win.reduce((s, x) => s + x.weightKg, 0) / win.length;
+    return { date: w.date, average: Math.round(avg * 100) / 100, count: win.length };
+  });
+}
+
+/** Data ISO de há `days` dias, ou null para "tudo". */
+export function periodStart(today: string, days: number | null): string | null {
+  return days === null ? null : shiftISODate(today, -days);
+}
+
+/** Converte uma data ISO em milissegundos (meia-noite UTC), para eixos de tempo. */
+export function isoToTime(iso: string): number {
+  return new Date(`${iso}T00:00:00Z`).getTime();
+}
