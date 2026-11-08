@@ -11,7 +11,7 @@ import { getDb, schema } from "./index";
 import { monthsAgoISO, todayISO } from "../lib/dates";
 
 async function main() {
-  const db = getDb();
+  const db = await getDb();
   const today = todayISO();
 
   // Perfil
@@ -101,7 +101,10 @@ async function main() {
   console.log("Seed concluído.");
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+main()
+  // Termina explicitamente: com PGlite (desenvolvimento local) o processo ficaria aberto.
+  .then(() => process.exit(0))
+  .catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });

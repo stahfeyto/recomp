@@ -8,6 +8,7 @@ Tracker pessoal de recomposição corporal — Next.js (App Router) + Neon Postg
 
 1. `npm install`
 2. Copia `.env.example` para `.env.local` e preenche `DATABASE_URL` (connection string *pooled* da Neon).
+   Sem Neon, para experimentar localmente: `DATABASE_URL="pglite:.pglite"` (Postgres em WebAssembly guardado na pasta `.pglite/`, só para desenvolvimento).
 3. `npm run db:migrate` — cria as tabelas.
 4. `npm run db:seed` — insere o perfil, a medição inicial, as metas e o plano de treino (pode correr várias vezes sem duplicar).
 5. `npm run dev` → http://localhost:3000

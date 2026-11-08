@@ -52,7 +52,8 @@ export async function checkCredentials(
 }
 
 async function readAttempts(key: string): Promise<AttemptState | null> {
-  const [row] = await getDb()
+  const db = await getDb();
+  const [row] = await db
     .select()
     .from(schema.loginAttempts)
     .where(eq(schema.loginAttempts.key, key))
@@ -69,7 +70,8 @@ export async function getLockSeconds(key: string): Promise<number> {
 export async function recordFailure(key: string): Promise<number> {
   const now = new Date();
   const next = registerFailure(await readAttempts(key), now);
-  await getDb()
+  const db = await getDb();
+  await db
     .insert(schema.loginAttempts)
     .values({ key, ...next })
     .onConflictDoUpdate({ target: schema.loginAttempts.key, set: next });
@@ -77,7 +79,8 @@ export async function recordFailure(key: string): Promise<number> {
 }
 
 export async function clearFailures(key: string): Promise<void> {
-  await getDb()
+  const db = await getDb();
+  await db
     .delete(schema.loginAttempts)
     .where(eq(schema.loginAttempts.key, key));
 }

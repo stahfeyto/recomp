@@ -46,3 +46,6 @@ next-env.d.ts
 # taste skill (verificações locais)
 /.taste-skill/
 /shots/
+
+# Postgres local de desenvolvimento (PGlite)
+/.pglite/
