@@ -5,7 +5,6 @@ import {
   ComposedChart,
   Line,
   ReferenceLine,
-  ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
@@ -86,9 +85,8 @@ export function WaistArmChart({
 
   return (
     <ChartFrame height={320} label="Variação da cintura e do braço desde o início do período, em centímetros.">
-      {(animate) => (
-        <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart data={rows} margin={{ ...chartMargin, right: 64 }}>
+      {() => (
+          <ComposedChart responsive style={{ width: "100%", height: "100%" }} data={rows} margin={{ ...chartMargin, right: 64 }}>
             <CartesianGrid stroke={CHART.grid} vertical={false} />
             <XAxis
               dataKey="t"
@@ -145,8 +143,7 @@ export function WaistArmChart({
               dot={false}
               activeDot={{ r: 5, stroke: CHART.surface, strokeWidth: 2, fill: CHART.cobalt }}
               connectNulls
-              isAnimationActive={animate}
-              animationDuration={1200}
+              isAnimationActive={false}
               label={(props) => <EndLabel {...props} lastIndex={lastWaist} text={(v) => fmt(v)} />}
             />
             <Line
@@ -158,13 +155,10 @@ export function WaistArmChart({
               dot={false}
               activeDot={{ r: 5, stroke: CHART.surface, strokeWidth: 2, fill: CHART.lime }}
               connectNulls
-              isAnimationActive={animate}
-              animationDuration={1200}
-              animationBegin={150}
+              isAnimationActive={false}
               label={(props) => <EndLabel {...props} lastIndex={lastArm} text={(v) => fmt(v)} />}
             />
           </ComposedChart>
-        </ResponsiveContainer>
       )}
     </ChartFrame>
   );

@@ -1,11 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { MeasureChart, type MeasurePoint } from "@/components/charts/measure-chart";
-import { RatioChart, type RatioRow } from "@/components/charts/ratio-chart";
+import { MeasureChart, RatioChart, WaistArmChart, WeightChart } from "@/components/charts/lazy";
+import type { MeasurePoint } from "@/components/charts/measure-chart";
+import type { RatioRow } from "@/components/charts/ratio-chart";
 import { CHART } from "@/components/charts/theme";
-import { WaistArmChart, type GoalMark, type WaistArmRow } from "@/components/charts/waist-arm-chart";
-import { WeightChart, type WeightRow } from "@/components/charts/weight-chart";
+import type { GoalMark, WaistArmRow } from "@/components/charts/waist-arm-chart";
+import type { WeightRow } from "@/components/charts/weight-chart";
 import { Card } from "@/components/ui/card";
 import {
   SHOULDER_WAIST_IDEAL,

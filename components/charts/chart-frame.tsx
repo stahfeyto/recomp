@@ -1,7 +1,7 @@
 "use client";
 
 import { useInView, useReducedMotion } from "motion/react";
-import { useRef, type ReactNode } from "react";
+import { useDeferredValue, useRef, type ReactNode } from "react";
 import { useHydrated } from "@/lib/use-hydrated";
 
 /**
@@ -26,7 +26,9 @@ export function ChartFrame({
   const inView = useInView(ref, { once: true, margin: "0px 0px -60px 0px" });
   const reduced = useReducedMotion();
   const hydrated = useHydrated();
-  const show = hydrated && (inView || reduced === true);
+  // Render diferido: o React desenha o gráfico em segundo plano, aos bocados, sem
+  // bloquear a página (o primeiro render do Recharts é pesado num telemóvel).
+  const show = useDeferredValue(hydrated && (inView || reduced === true), false);
 
   return (
     <div ref={ref} className="chart-frame" style={{ height }} role="figure" aria-label={label}>

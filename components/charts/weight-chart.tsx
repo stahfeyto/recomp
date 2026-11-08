@@ -5,7 +5,6 @@ import {
   ComposedChart,
   Line,
   ReferenceLine,
-  ResponsiveContainer,
   Scatter,
   Tooltip,
   XAxis,
@@ -40,9 +39,8 @@ export function WeightChart({
 
   return (
     <ChartFrame height={260} label="Peso: pesagens diárias e média móvel de 7 dias.">
-      {(animate) => (
-        <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart data={rows} margin={{ ...chartMargin, right: 64 }}>
+      {() => (
+          <ComposedChart responsive style={{ width: "100%", height: "100%" }} data={rows} margin={{ ...chartMargin, right: 64 }}>
             <CartesianGrid stroke={CHART.grid} vertical={false} />
             <XAxis
               dataKey="t"
@@ -111,12 +109,10 @@ export function WeightChart({
               dot={false}
               activeDot={{ r: 5, stroke: CHART.surface, strokeWidth: 2, fill: CHART.cobalt }}
               connectNulls
-              isAnimationActive={animate}
-              animationDuration={1200}
+              isAnimationActive={false}
               label={(props) => <EndLabel {...props} lastIndex={lastAvg} text={kg} />}
             />
           </ComposedChart>
-        </ResponsiveContainer>
       )}
     </ChartFrame>
   );

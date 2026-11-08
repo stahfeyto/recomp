@@ -5,7 +5,6 @@ import {
   Line,
   LineChart,
   ReferenceLine,
-  ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
@@ -35,9 +34,8 @@ export function RatioChart({
   const last = rows.length - 1;
   return (
     <ChartFrame height={220} label={`Proporção ombros/cintura ao longo do tempo; ideal ${fmt2(ideal)}.`}>
-      {(animate) => (
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={rows} margin={{ ...chartMargin, right: 56 }}>
+      {() => (
+          <LineChart responsive style={{ width: "100%", height: "100%" }} data={rows} margin={{ ...chartMargin, right: 56 }}>
             <CartesianGrid stroke={CHART.grid} vertical={false} />
             <XAxis
               dataKey="t"
@@ -85,12 +83,10 @@ export function RatioChart({
               strokeWidth={2}
               dot={rows.length <= 12 ? { r: 4, fill: CHART.cobalt, stroke: CHART.surface, strokeWidth: 2 } : false}
               activeDot={{ r: 5, stroke: CHART.surface, strokeWidth: 2, fill: CHART.cobalt }}
-              isAnimationActive={animate}
-              animationDuration={1200}
+              isAnimationActive={false}
               label={(props) => <EndLabel {...props} lastIndex={last} text={fmt2} />}
             />
           </LineChart>
-        </ResponsiveContainer>
       )}
     </ChartFrame>
   );

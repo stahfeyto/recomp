@@ -1,6 +1,6 @@
 "use client";
 
-import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts";
 import { formatDecimal } from "@/lib/number";
 import { ChartFrame } from "./chart-frame";
 import { ChartTooltipBox } from "./chart-tooltip";
@@ -26,9 +26,8 @@ export function MeasureChart({
 }) {
   return (
     <ChartFrame height={150} label={`${label} ao longo do tempo.`}>
-      {(animate) => (
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={points} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+      {() => (
+          <AreaChart responsive style={{ width: "100%", height: "100%" }} data={points} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
             <defs>
               <linearGradient id={`m-${id}`} x1="0" x2="0" y1="0" y2="1">
                 <stop offset="0%" stopColor={CHART.cobalt} stopOpacity={0.22} />
@@ -77,11 +76,9 @@ export function MeasureChart({
               fill={`url(#m-${id})`}
               dot={points.length <= 10 ? { r: 3, fill: CHART.cobalt, stroke: CHART.surface, strokeWidth: 2 } : false}
               activeDot={{ r: 5, stroke: CHART.surface, strokeWidth: 2, fill: CHART.cobalt }}
-              isAnimationActive={animate}
-              animationDuration={1000}
+              isAnimationActive={false}
             />
           </AreaChart>
-        </ResponsiveContainer>
       )}
     </ChartFrame>
   );
