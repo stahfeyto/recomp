@@ -14,7 +14,7 @@ export default function LoginPage() {
       <div className="login-content">
         <h1 className="login-wordmark">RECOMP</h1>
         <p className="login-lead">Cintura a descer, braço a subir.</p>
-        <Suspense fallback={<div className="glass-card login-card login-card--placeholder" />}>
+        <Suspense fallback={<div className="glass glass--strong login-card login-card--placeholder" />}>
           <LoginForm />
         </Suspense>
       </div>

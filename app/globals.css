@@ -1,22 +1,65 @@
 @import "tailwindcss";
 
-/*
- * RECOMP — tokens da secção 8.2 do prompt.
- * O design system completo (cartões vidro, botões, dock, toasts…) chega na fase 3.
- */
+/* ============================================================================
+ * RECOMP — design system
+ * Cores: secção 8.2 do prompt. Movimento: tempos e curvas da skill
+ * design-taste-frontend (hover 150/120 ms, press 90 ms, sem overshoot).
+ * ========================================================================== */
+
 :root {
+  /* Paleta 8.2 */
   --ink-950: #05060d;
   --ink-900: #0a0d1f;
   --ink-800: #121735;
   --cobalt-600: #1b2cff; /* fundos de botão (texto branco ≈ 7,4:1); nunca texto sobre ink */
   --cobalt-400: #4b63ff; /* hover, glows, linhas de gráfico, texto grande */
-  --ice-100: #dce6ff;
-  --ice-300: #9fb3e8;
+  --ice-100: #dce6ff; /* texto principal */
+  --ice-300: #9fb3e8; /* texto secundário */
   --vermillion-500: #ff4a2b;
   --acid-400: #d7ff3a;
   --success: #3df5a6;
 
+  /* Derivados para texto pequeno (WCAG AA sobre ink-900/800) */
+  --cobalt-300: #8193ff; /* ≈ 7:1 */
+  --vermillion-300: #ff8a73; /* ≈ 7:1 */
+
+  /* Superfícies */
+  --line: rgb(220 230 255 / 0.12);
+  --line-strong: rgb(220 230 255 / 0.22);
+  --glass-bg: rgb(18 23 53 / 0.55);
+  --glass-bg-strong: rgb(18 23 53 / 0.78);
+  --field-bg: rgb(5 6 13 / 0.6);
+
+  /* Raios */
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 20px;
+  --r-xl: 28px;
+
+  /* Movimento */
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-enter: cubic-bezier(0.22, 1, 0.36, 1);
+  --m-in: 150ms;
+  --m-out: 120ms;
+  --m-press: 90ms;
+
+  /* Layout */
+  --gutter: 16px;
+  --dock-h: 72px;
+  --rail-w: 96px;
+
   color-scheme: dark;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --gutter: 24px;
+  }
+}
+@media (min-width: 1024px) {
+  :root {
+    --gutter: 32px;
+  }
 }
 
 @theme inline {
@@ -25,36 +68,418 @@
   --color-ink-800: var(--ink-800);
   --color-cobalt-600: var(--cobalt-600);
   --color-cobalt-400: var(--cobalt-400);
+  --color-cobalt-300: var(--cobalt-300);
   --color-ice-100: var(--ice-100);
   --color-ice-300: var(--ice-300);
   --color-vermillion-500: var(--vermillion-500);
+  --color-vermillion-300: var(--vermillion-300);
   --color-acid-400: var(--acid-400);
   --color-success: var(--success);
+  --color-line: var(--line);
 
-  /* Macros */
+  /* Macros: proteína = cobalto, hidratos = acid, gordura = vermillion */
   --color-protein: var(--cobalt-400);
   --color-carbs: var(--acid-400);
   --color-fat: var(--vermillion-500);
 
   --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-unbounded), var(--font-geist), sans-serif;
+
+  --radius-sm: var(--r-sm);
+  --radius-md: var(--r-md);
+  --radius-lg: var(--r-lg);
+  --radius-xl: var(--r-xl);
+
+  --ease-ui: var(--ease);
+  --ease-enter: var(--ease-enter);
 }
+
+/* ---------------------------------------------------------------- base */
 
 html {
   background: var(--ink-950);
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
   background: var(--ink-950);
   color: var(--ice-100);
   font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.5;
 }
 
-.tabular {
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+.tabular,
+input,
+.num {
   font-variant-numeric: tabular-nums;
 }
 
 :focus-visible {
   outline: 2px solid var(--ice-100);
   outline-offset: 2px;
+}
+
+::selection {
+  background: rgb(75 99 255 / 0.45);
+}
+
+.skip-link {
+  position: fixed;
+  left: 12px;
+  top: 12px;
+  z-index: 100;
+  padding: 10px 16px;
+  border-radius: var(--r-sm);
+  background: var(--ice-100);
+  color: var(--ink-950);
+  font-weight: 600;
+  transform: translateY(-200%);
+}
+.skip-link:focus-visible {
+  transform: none;
+}
+
+@layer components {
+  /* ------------------------------------------------------------ vidro */
+
+  .glass {
+    position: relative;
+    isolation: isolate;
+    background: var(--glass-bg);
+    border-radius: var(--r-lg);
+    backdrop-filter: blur(20px) saturate(1.2);
+    box-shadow:
+      inset 0 1px 0 rgb(220 230 255 / 0.06),
+      0 24px 60px -24px rgb(0 0 0 / 0.65);
+  }
+
+  /* Borda de 1px em gradiente subtil */
+  .glass::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    padding: 1px;
+    border-radius: inherit;
+    background: linear-gradient(
+      160deg,
+      rgb(220 230 255 / 0.24),
+      rgb(220 230 255 / 0.05) 38%,
+      rgb(220 230 255 / 0.04) 62%,
+      rgb(75 99 255 / 0.28)
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  /* Spotlight que segue o cursor (só desktop; as vars vêm do SpotlightLayer) */
+  .glass[data-spotlight]::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: radial-gradient(
+      420px circle at var(--mx, 50%) var(--my, 50%),
+      rgb(75 99 255 / 0.14),
+      transparent 60%
+    );
+    opacity: 0;
+    transition: opacity 300ms var(--ease);
+    pointer-events: none;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .glass[data-spotlight]:hover::before {
+      opacity: 1;
+    }
+  }
+
+  .glass--strong {
+    background: var(--glass-bg-strong);
+  }
+
+  /* Cartão com link: sobe 2px e a borda clareia */
+  .card-link {
+    display: block;
+    transition: transform 180ms var(--ease);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .card-link:hover {
+      transform: translateY(-2px);
+    }
+  }
+
+  /* ----------------------------------------------------------- botões */
+
+  .btn {
+    --btn-bg: transparent;
+    --btn-bg-hover: rgb(220 230 255 / 0.08);
+    --btn-fg: var(--ice-100);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 18px;
+    border-radius: var(--r-md);
+    background: var(--btn-bg);
+    color: var(--btn-fg);
+    font-weight: 600;
+    font-size: 0.9375rem;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    transition:
+      background-color var(--m-out) var(--ease),
+      border-color var(--m-out) var(--ease),
+      transform var(--m-out) var(--ease);
+  }
+  .btn svg {
+    width: 18px;
+    height: 18px;
+    flex: none;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .btn:hover:not(:disabled) {
+      background: var(--btn-bg-hover);
+      transform: translateY(-1px);
+      transition-duration: var(--m-in);
+    }
+  }
+  .btn:active:not(:disabled) {
+    transform: translateY(1px) scale(0.985);
+    transition-duration: var(--m-press);
+  }
+  .btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+  .btn[aria-busy="true"] {
+    cursor: progress;
+  }
+
+  .btn--primary {
+    --btn-bg: var(--cobalt-600);
+    --btn-bg-hover: #3a49ff;
+    --btn-fg: #fff;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.18),
+      0 8px 24px -10px rgb(27 44 255 / 0.8);
+  }
+  .btn--secondary {
+    --btn-bg: rgb(220 230 255 / 0.04);
+    --btn-bg-hover: rgb(220 230 255 / 0.1);
+    border: 1px solid var(--line-strong);
+  }
+  .btn--ghost {
+    --btn-bg-hover: rgb(220 230 255 / 0.08);
+    padding: 0 12px;
+  }
+  .btn--danger {
+    --btn-bg: var(--vermillion-500);
+    --btn-bg-hover: #ff6a50;
+    --btn-fg: var(--ink-950);
+  }
+  .btn--acid {
+    --btn-bg: var(--acid-400);
+    --btn-bg-hover: #e2ff6e;
+    --btn-fg: var(--ink-950);
+  }
+  .btn--lg {
+    min-height: 52px;
+    padding: 0 24px;
+    font-size: 1rem;
+    border-radius: var(--r-md);
+  }
+  .btn--sm {
+    min-height: 36px;
+    padding: 0 12px;
+    font-size: 0.875rem;
+    border-radius: var(--r-sm);
+  }
+  .btn--icon {
+    width: 44px;
+    padding: 0;
+  }
+  .btn--block {
+    width: 100%;
+  }
+
+  /* -------------------------------------------------------- formulários */
+
+  .field {
+    display: grid;
+    gap: 6px;
+  }
+  .field__label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--ice-300);
+  }
+  .field__hint {
+    font-size: 0.8125rem;
+    color: var(--ice-300);
+  }
+  .field__error {
+    font-size: 0.8125rem;
+    color: var(--vermillion-300);
+  }
+
+  .input {
+    width: 100%;
+    height: 48px;
+    padding: 0 14px;
+    border-radius: var(--r-md);
+    border: 1px solid rgb(220 230 255 / 0.16);
+    background: var(--field-bg);
+    color: var(--ice-100);
+    font-size: 1rem;
+    transition:
+      border-color 140ms var(--ease),
+      box-shadow 140ms var(--ease);
+  }
+  .input::placeholder {
+    color: rgb(159 179 232 / 0.4);
+  }
+  .input:focus-visible {
+    outline: none;
+    border-color: var(--cobalt-400);
+    box-shadow: 0 0 0 3px rgb(75 99 255 / 0.35);
+  }
+  .input[aria-invalid="true"] {
+    border-color: rgb(255 74 43 / 0.75);
+  }
+  textarea.input {
+    height: auto;
+    min-height: 96px;
+    padding: 12px 14px;
+    resize: vertical;
+  }
+
+  /* Input numérico grande (registo de medidas no telemóvel) */
+  .input--xl {
+    height: 64px;
+    padding: 0 16px;
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+
+  .input-affix {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .input-affix .input {
+    padding-right: 52px;
+  }
+  .input-affix__unit {
+    position: absolute;
+    right: 16px;
+    color: var(--ice-300);
+    font-size: 0.9375rem;
+    pointer-events: none;
+  }
+
+  .check {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    color: var(--ice-300);
+    cursor: pointer;
+  }
+  .check input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--cobalt-600);
+  }
+
+  /* --------------------------------------------------------- skeleton */
+
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--r-sm);
+    background: rgb(220 230 255 / 0.06);
+  }
+  .skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgb(220 230 255 / 0.08),
+      transparent
+    );
+    transform: translateX(-100%);
+    animation: shimmer 1.4s linear infinite;
+  }
+
+  /* ----------------------------------------------------------- etiquetas */
+
+  .eyebrow {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ice-300);
+  }
+
+  /* ------------------------------------------------ entrada escalonada */
+  /* Uma vez, ao abrir a página. Nunca ao fazer scroll. */
+  .stagger > * {
+    animation: enter-up 520ms var(--ease-enter) both;
+  }
+  .stagger > :nth-child(2) { animation-delay: 60ms; }
+  .stagger > :nth-child(3) { animation-delay: 120ms; }
+  .stagger > :nth-child(4) { animation-delay: 180ms; }
+  .stagger > :nth-child(5) { animation-delay: 240ms; }
+  .stagger > :nth-child(6) { animation-delay: 300ms; }
+  .stagger > :nth-child(n + 7) { animation-delay: 360ms; }
+}
+
+@keyframes shimmer {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes enter-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    transition-property: opacity, color, background-color, border-color !important;
+  }
+  .skeleton::after {
+    display: none;
+  }
 }

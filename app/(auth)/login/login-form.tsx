@@ -2,6 +2,8 @@
 
 import { useActionState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Checkbox, TextField } from "@/components/ui/field";
 import { login, type LoginState } from "./actions";
 
 const initial: LoginState = { error: null, attempt: 0, username: "" };
@@ -37,51 +39,41 @@ export function LoginForm() {
   const describedBy = state.error ? "login-error" : undefined;
 
   return (
-    <form ref={cardRef} action={action} className="glass-card login-card" noValidate>
+    <form ref={cardRef} action={action} className="glass glass--strong login-card" noValidate>
       <input type="hidden" name="from" value={from} />
 
-      <div className="field">
-        <label htmlFor="username">Nome de utilizador</label>
-        <input
-          id="username"
-          name="username"
-          type="text"
-          autoComplete="username"
-          autoCapitalize="words"
-          spellCheck={false}
-          required
-          defaultValue={state.username}
-          aria-invalid={invalid}
-          aria-describedby={describedBy}
-        />
-      </div>
+      <TextField
+        label="Nome de utilizador"
+        name="username"
+        autoComplete="username"
+        autoCapitalize="words"
+        spellCheck={false}
+        required
+        defaultValue={state.username}
+        aria-invalid={invalid}
+        aria-describedby={describedBy}
+      />
 
-      <div className="field">
-        <label htmlFor="password">Palavra-passe</label>
-        <input
-          ref={passwordRef}
-          id="password"
-          name="password"
-          type="password"
-          autoComplete="current-password"
-          required
-          aria-invalid={invalid}
-          aria-describedby={describedBy}
-        />
-      </div>
+      <TextField
+        ref={passwordRef}
+        label="Palavra-passe"
+        name="password"
+        type="password"
+        autoComplete="current-password"
+        required
+        aria-invalid={invalid}
+        aria-describedby={describedBy}
+      />
 
-      <label className="check">
-        <input type="checkbox" name="remember" defaultChecked />
-        <span>Manter sessão iniciada</span>
-      </label>
+      <Checkbox label="Manter sessão iniciada" name="remember" defaultChecked />
 
       <p id="login-error" className="login-error" role="alert">
         {state.error}
       </p>
 
-      <button type="submit" className="btn-primary" disabled={pending}>
+      <Button type="submit" variant="primary" size="lg" block loading={pending}>
         {pending ? "A entrar…" : "Iniciar sessão"}
-      </button>
+      </Button>
     </form>
   );
 }
