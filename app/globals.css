@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+/*
+ * RECOMP — tokens da secção 8.2 do prompt.
+ * O design system completo (cartões vidro, botões, dock, toasts…) chega na fase 3.
+ */
+:root {
+  --ink-950: #05060d;
+  --ink-900: #0a0d1f;
+  --ink-800: #121735;
+  --cobalt-600: #1b2cff; /* fundos de botão (texto branco ≈ 7,4:1); nunca texto sobre ink */
+  --cobalt-400: #4b63ff; /* hover, glows, linhas de gráfico, texto grande */
+  --ice-100: #dce6ff;
+  --ice-300: #9fb3e8;
+  --vermillion-500: #ff4a2b;
+  --acid-400: #d7ff3a;
+  --success: #3df5a6;
+
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-ink-950: var(--ink-950);
+  --color-ink-900: var(--ink-900);
+  --color-ink-800: var(--ink-800);
+  --color-cobalt-600: var(--cobalt-600);
+  --color-cobalt-400: var(--cobalt-400);
+  --color-ice-100: var(--ice-100);
+  --color-ice-300: var(--ice-300);
+  --color-vermillion-500: var(--vermillion-500);
+  --color-acid-400: var(--acid-400);
+  --color-success: var(--success);
+
+  /* Macros */
+  --color-protein: var(--cobalt-400);
+  --color-carbs: var(--acid-400);
+  --color-fat: var(--vermillion-500);
+
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-unbounded), var(--font-geist), sans-serif;
+}
+
+html {
+  background: var(--ink-950);
+}
+
+body {
+  background: var(--ink-950);
+  color: var(--ice-100);
+  font-family: var(--font-sans);
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ice-100);
+  outline-offset: 2px;
+}
