@@ -14,7 +14,7 @@ import { FORM_STEPS, MEASURES, type MeasureKey } from "@/lib/measures";
 import { formatDecimal, parseDecimal } from "@/lib/number";
 import { saveMeasurement, type SaveMeasurementState } from "./actions";
 import { Celebration } from "./celebration";
-import { DeltaBadge } from "./delta-badge";
+import { DeltaBadge } from "@/components/ui/delta-badge";
 
 type LastValues = Partial<Record<MeasureKey, { value: number; date: string }>>;
 

@@ -23,3 +23,8 @@ export function monthsAgoISO(months: number): string {
 export function weekdayMondayFirst(date: Date = nowInLisbon()): number {
   return (date.getDay() + 6) % 7;
 }
+
+/** Hora atual em Lisboa (0–23). */
+export function lisbonHour(): number {
+  return nowInLisbon().getHours();
+}

@@ -1,24 +1,16 @@
 "use client";
 
 import { Plus, Scale, Trash2 } from "lucide-react";
-import { useActionState, useEffect, useRef, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
-import { TextField } from "@/components/ui/field";
+import { DailyWeightForm } from "@/components/forms/daily-weight-form";
 import { useToast } from "@/components/ui/toast";
 import type { DailyWeightRow } from "@/lib/data/measurements";
 import { formatDayMonth } from "@/lib/format";
-import { haptic } from "@/lib/haptics";
 import { formatDecimal } from "@/lib/number";
-import {
-  deleteDailyWeight,
-  restoreDailyWeight,
-  saveDailyWeight,
-  type SaveDailyWeightState,
-} from "./actions";
-
-const initial: SaveDailyWeightState = { status: "idle", nonce: 0 };
+import { deleteDailyWeight, restoreDailyWeight } from "./actions";
 
 /** Cartão "Pesagem diária": média de 7 dias, últimas pesagens e registo rápido. */
 export function DailyWeightCard({
@@ -108,52 +100,5 @@ export function DailyWeightCard({
         <DailyWeightForm today={today} defaultWeight={todayWeight?.weightKg} onDone={() => setOpen(false)} />
       </Dialog>
     </Card>
-  );
-}
-
-function DailyWeightForm({
-  today,
-  defaultWeight,
-  onDone,
-}: {
-  today: string;
-  defaultWeight?: number;
-  onDone: () => void;
-}) {
-  const [state, action, pending] = useActionState(saveDailyWeight, initial);
-  const { toast } = useToast();
-  const handled = useRef(0);
-
-  useEffect(() => {
-    if (state.nonce === 0 || handled.current === state.nonce) return;
-    handled.current = state.nonce;
-    if (state.status === "ok") {
-      haptic(15);
-      toast({ variant: "success", title: state.message ?? "Pesagem guardada" });
-      onDone();
-    } else if (state.errors?.form) {
-      toast({ variant: "error", title: state.errors.form });
-    }
-  }, [state, toast, onDone]);
-
-  const errors = state.status === "error" ? state.errors : undefined;
-
-  return (
-    <form action={action} className="grid gap-4" noValidate>
-      <TextField
-        label="Peso"
-        name="weightKg"
-        unit="kg"
-        size="xl"
-        decimal
-        autoFocus
-        defaultValue={defaultWeight !== undefined ? formatDecimal(defaultWeight, { maximumFractionDigits: 2 }) : ""}
-        error={errors?.weightKg}
-      />
-      <TextField label="Data" name="date" type="date" defaultValue={today} max={today} error={errors?.date} />
-      <Button type="submit" variant="primary" size="lg" block loading={pending}>
-        {pending ? "A guardar…" : "Guardar pesagem"}
-      </Button>
-    </form>
   );
 }

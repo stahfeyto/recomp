@@ -12,7 +12,7 @@ import { formatDate, formatSigned } from "@/lib/format";
 import { MEASURES } from "@/lib/measures";
 import { formatDecimal } from "@/lib/number";
 import { deleteMeasurement, restoreMeasurement } from "./actions";
-import { DeltaBadge } from "./delta-badge";
+import { DeltaBadge } from "@/components/ui/delta-badge";
 import { MeasurementForm } from "./measurement-form";
 
 /** Histórico dos registos semanais (mais recente primeiro), com editar e apagar. */

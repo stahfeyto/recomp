@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AccountMenu } from "@/components/layout/account-menu";
 import { AppBackground } from "@/components/layout/app-background";
 import { Dock } from "@/components/layout/dock";
+import { RegisterFab } from "@/components/layout/register-fab";
 import { SpotlightLayer } from "@/components/layout/spotlight-layer";
 import { Providers } from "@/components/layout/providers";
 import "./app-shell.css";
@@ -27,6 +28,7 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
       </header>
 
       <Dock />
+      <RegisterFab />
 
       <main id="conteudo" className="app-main" tabIndex={-1}>
         {children}

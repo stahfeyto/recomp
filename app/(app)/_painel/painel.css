@@ -1,0 +1,427 @@
+/* Painel: grelha bento e componentes do painel. */
+
+.bento {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-areas:
+    "waist waist"
+    "weight weight"
+    "training training"
+    "macros macros"
+    "arm arm"
+    "chest shoulders"
+    "ratio ratio"
+    "whr whr"
+    "checkin checkin"
+    "routine routine";
+}
+
+@media (min-width: 768px) {
+  .bento {
+    gap: 16px;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-areas:
+      "waist waist waist weight weight weight"
+      "arm arm chest chest shoulders shoulders"
+      "macros macros macros checkin checkin checkin"
+      "ratio ratio ratio whr whr whr"
+      "training training training routine routine routine";
+  }
+}
+
+@media (min-width: 1200px) {
+  .bento {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    grid-template-areas:
+      "waist waist waist waist waist weight weight weight weight macros macros macros"
+      "arm arm arm chest chest chest shoulders shoulders shoulders macros macros macros"
+      "ratio ratio ratio ratio checkin checkin checkin checkin training training training training"
+      "whr whr whr whr checkin checkin checkin checkin training training training training"
+      "routine routine routine routine routine routine routine routine routine routine routine routine";
+  }
+  .routine {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px 24px;
+  }
+}
+
+.bento__waist { grid-area: waist; }
+.bento__weight { grid-area: weight; }
+.bento__macros { grid-area: macros; }
+.bento__arm { grid-area: arm; }
+.bento__chest { grid-area: chest; }
+.bento__shoulders { grid-area: shoulders; }
+.bento__ratio { grid-area: ratio; }
+.bento__whr { grid-area: whr; }
+.bento__checkin { grid-area: checkin; }
+.bento__training { grid-area: training; }
+.bento__routine { grid-area: routine; }
+
+/* ---------------------------------------------------------------- KPI */
+
+.kpi {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  padding: 20px;
+}
+
+@media (min-width: 768px) {
+  .kpi {
+    padding: 24px;
+  }
+}
+
+.kpi__value {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(2rem, 6vw, 2.5rem);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.kpi--lg .kpi__value {
+  font-size: clamp(2.75rem, 9vw, 4rem);
+}
+
+.kpi__unit {
+  font-size: 0.45em;
+  color: var(--ice-300);
+  letter-spacing: 0;
+}
+
+.kpi__deltas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+}
+
+.kpi__deltas li {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 6px;
+}
+
+.kpi__deltas .delta {
+  white-space: nowrap;
+}
+
+.kpi__note {
+  font-size: 0.8125rem;
+  color: var(--ice-300);
+}
+
+/* ---------------------------------------------------------- sparkline */
+
+.sparkline {
+  position: relative;
+  height: 56px;
+  margin-top: 6px;
+}
+
+.sparkline svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  animation: spark-reveal 1.2s var(--ease-enter) 200ms both;
+}
+
+.sparkline__line {
+  fill: none;
+  stroke: var(--cobalt-400);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.sparkline__dot {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 -4px;
+  border-radius: 50%;
+  background: var(--ice-100);
+  box-shadow: 0 0 0 3px rgb(75 99 255 / 0.45), 0 0 12px rgb(75 99 255 / 0.8);
+  animation: fade-in 300ms var(--ease) 1.2s both;
+}
+
+@keyframes spark-reveal {
+  from {
+    clip-path: inset(-10px 100% -10px 0);
+  }
+  to {
+    clip-path: inset(-10px 0 -10px 0);
+  }
+}
+
+/* -------------------------------------------------------- anéis macros */
+
+.macro-rings {
+  display: grid;
+  gap: 18px;
+}
+
+.macro-rings__chart {
+  position: relative;
+  width: min(220px, 100%);
+  aspect-ratio: 1;
+  justify-self: center;
+}
+
+.macro-rings__chart svg {
+  width: 100%;
+  height: 100%;
+}
+
+.macro-rings__track,
+.macro-rings__arc {
+  fill: none;
+  stroke-width: 9;
+}
+
+.macro-rings__track {
+  opacity: 0.14;
+}
+
+.macro-rings__arc {
+  stroke-linecap: round;
+  animation: ring-fill 1.3s var(--ease-enter) both;
+  filter: drop-shadow(0 0 4px rgb(0 0 0 / 0.4));
+}
+
+@keyframes ring-fill {
+  from {
+    stroke-dashoffset: var(--c);
+  }
+  to {
+    stroke-dashoffset: var(--to);
+  }
+}
+
+.macro-rings__center {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 4px;
+}
+
+.macro-rings__legend {
+  display: grid;
+  gap: 8px;
+}
+
+.macro-rings__legend li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.macro-rings__swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex: none;
+}
+
+/* ---------------------------------------------------------- rácio */
+
+.ratio-meter {
+  display: grid;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.ratio-meter__track {
+  position: relative;
+  height: 8px;
+  border-radius: 8px;
+  background: rgb(220 230 255 / 0.1);
+}
+
+.ratio-meter--zone .ratio-meter__track {
+  background: linear-gradient(
+    90deg,
+    rgb(61 245 166 / 0.35) 0,
+    rgb(61 245 166 / 0.35) var(--m),
+    rgb(255 74 43 / 0.3) var(--m),
+    rgb(255 74 43 / 0.3) 100%
+  );
+}
+
+.ratio-meter__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--v);
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--cobalt-600), var(--cobalt-400));
+  transform-origin: left;
+  animation: meter-fill 1.2s var(--ease-enter) 200ms both;
+}
+
+@keyframes meter-fill {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+.ratio-meter__mark {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  left: var(--m);
+  width: 2px;
+  margin-left: -1px;
+  border-radius: 2px;
+  background: var(--acid-400);
+}
+
+.ratio-meter__pointer {
+  position: absolute;
+  top: 50%;
+  left: var(--v);
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  border-radius: 50%;
+  background: var(--ice-100);
+  box-shadow: 0 0 0 3px var(--ink-900);
+}
+
+.ratio-meter__scale {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--ice-300);
+  font-variant-numeric: tabular-nums;
+}
+
+.ratio-meter__mark-label {
+  position: absolute;
+  left: var(--m);
+  translate: -50% 0;
+  color: var(--acid-400);
+  white-space: nowrap;
+}
+
+/* --------------------------------------------------- check-in / rotina */
+
+.checklist {
+  display: grid;
+  gap: 6px;
+}
+
+.checklist li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--r-sm);
+  background: rgb(220 230 255 / 0.04);
+}
+
+.checklist li span {
+  font-size: 0.8125rem;
+  color: var(--ice-300);
+}
+
+.checklist li[data-due="true"] {
+  box-shadow: inset 2px 0 0 var(--acid-400);
+}
+
+.checklist li[data-due="true"] span {
+  color: var(--acid-400);
+}
+
+.routine {
+  display: grid;
+  gap: 10px;
+}
+
+.routine li {
+  position: relative;
+  padding-left: 20px;
+  color: var(--ice-100);
+}
+
+.routine li::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 0.6em;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 2px solid var(--cobalt-400);
+}
+
+/* ------------------------------------------------------- treino */
+
+.type-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.type-badge[data-tone="cobalt"] {
+  background: rgb(27 44 255 / 0.3);
+  color: var(--cobalt-300);
+}
+.type-badge[data-tone="acid"] {
+  background: rgb(215 255 58 / 0.14);
+  color: var(--acid-400);
+}
+.type-badge[data-tone="ice"] {
+  background: rgb(220 230 255 / 0.1);
+  color: var(--ice-100);
+}
+.type-badge[data-tone="muted"] {
+  background: rgb(220 230 255 / 0.06);
+  color: var(--ice-300);
+}
+
+.exercise-list {
+  display: grid;
+  gap: 4px;
+}
+
+.exercise-list li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.exercise-list__n {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  background: rgb(75 99 255 / 0.18);
+  color: var(--cobalt-300);
+  flex: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sparkline svg,
+  .sparkline__dot,
+  .macro-rings__arc,
+  .ratio-meter__fill {
+    animation: none;
+  }
+}
