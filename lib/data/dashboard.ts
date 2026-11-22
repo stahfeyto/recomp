@@ -62,6 +62,8 @@ export async function getDashboardData() {
   // Mini-gráficos das últimas 8 semanas: a linha da média de 7 dias.
   const from56 = shiftISODate(today, -56);
   const spark = (pts: Point[]) => movingAverage(pts).filter((p) => p.date >= from56 && p.date <= today);
+  // As medições do dia a dia no mesmo período (os pontos por cima da linha).
+  const daily = (pts: Point[]) => pts.filter((p) => p.date >= from56 && p.date <= today);
 
   const heightCm = profile?.heightCm ?? null;
   const waistNow = waist?.current.value ?? null;
@@ -122,6 +124,7 @@ export async function getDashboardData() {
       : null,
     waistSpark: spark(waistPts),
     weightSpark: spark(weightPts),
+    waistDaily: daily(waistPts),
   };
 }
 

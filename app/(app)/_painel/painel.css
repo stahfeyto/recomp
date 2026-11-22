@@ -1,6 +1,8 @@
-/* Painel em cartaz: a cintura em grande, o ritual de hoje em pílulas empilhadas,
-   as medidas da semana em colunas com réguas. Cartões (vidro) só no treino e nas
-   metas, que têm ações. */
+/* Painel em cartaz: a cintura em grande com a linha-herói, o ritual de hoje em
+   pílulas empilhadas, as medidas da semana, o treino e as metas em secções com
+   réguas (sem cartões). Movimento: uma sequência ao abrir; ao fazer scroll, os
+   títulos revelam-se e as pílulas/barras entram (scroll-driven, sem JavaScript);
+   ambiente: mancha líquida, contorno a derivar, varrimento na linha. */
 
 .painel {
   display: grid;
@@ -18,7 +20,7 @@
   isolation: isolate;
 }
 
-/* A palavra em contorno, enorme, atrás do número (textura de cartaz). */
+/* A palavra em contorno, enorme, atrás do número (textura de cartaz); deriva devagar. */
 .hero__ghost {
   position: absolute;
   right: -0.03em;
@@ -34,6 +36,18 @@
   white-space: nowrap;
   pointer-events: none;
   user-select: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero__ghost {
+    animation: ghost-drift 46s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes ghost-drift {
+  to {
+    transform: translateX(-5%);
+  }
 }
 
 .hero__main,
@@ -105,7 +119,7 @@
   max-width: 46ch;
 }
 
-/* variações em pílulas */
+/* variações em pílulas (entram uma a seguir à outra) */
 .deltas {
   display: flex;
   flex-wrap: wrap;
@@ -125,6 +139,7 @@
   background: rgb(243 240 255 / 0.06);
   font-size: 0.875rem;
   color: var(--ice-300);
+  animation: rise-in 520ms var(--ease-enter) calc(320ms + var(--i, 0) * 100ms) both;
 }
 
 .deltas__item[data-tone="good"] {
@@ -139,8 +154,8 @@
   font-size: 0.9375rem;
 }
 
-/* "líquido": mancha violeta com um reflexo lima, atrás do número, a respirar
-   devagar. Telemóvel e tablet; no desktop é o nó 3D em cromado. */
+/* "líquido": duas manchas violeta com reflexos lima, atrás do número, a respirar
+   em sentidos contrários. */
 .liquid {
   position: absolute;
   z-index: -1;
@@ -158,9 +173,24 @@
   will-change: transform;
 }
 
+.liquid::before {
+  content: "";
+  position: absolute;
+  inset: 12% 14% 16% 10%;
+  border-radius: 45% 55% 40% 60% / 55% 45% 60% 40%;
+  background:
+    radial-gradient(circle at 62% 38%, rgb(198 255 51 / 0.45), transparent 48%),
+    radial-gradient(circle at 34% 70%, rgb(125 57 235 / 0.85), transparent 66%);
+  mix-blend-mode: screen;
+  will-change: transform;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .liquid {
     animation: liquid 16s ease-in-out infinite alternate;
+  }
+  .liquid::before {
+    animation: liquid-b 11s ease-in-out infinite alternate;
   }
 }
 
@@ -176,6 +206,15 @@
   }
 }
 
+@keyframes liquid-b {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+  }
+  100% {
+    transform: translate3d(18px, -14px, 0) rotate(-40deg) scale(1.12);
+  }
+}
+
 @media (min-width: 1024px) {
   .hero {
     grid-template-columns: minmax(0, 1fr) 300px;
@@ -188,31 +227,153 @@
     border-left: 1px solid var(--line);
   }
   .liquid {
-    display: none;
+    right: 300px;
+    top: -120px;
+    width: 380px;
+    height: 380px;
+    filter: blur(24px);
   }
 }
 
-/* ---------------------------------------------------------- mini-gráficos */
+/* ------------------------------------------------------------ linha-herói */
 
+.heroline {
+  position: relative;
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  grid-template-rows: 1fr auto;
+  height: 150px;
+  margin-top: 10px;
+}
+
+@media (min-width: 768px) {
+  .heroline {
+    height: 190px;
+  }
+}
+
+.heroline__scale {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: start;
+  font-size: 0.75rem;
+  color: var(--ice-300);
+}
+
+.heroline__scale--min {
+  align-self: end;
+}
+
+.heroline__plot {
+  position: relative;
+  grid-column: 2;
+  grid-row: 1;
+  /* corta só à esquerda e à direita (o varrimento começa fora); em cima e em baixo
+     o brilho e os pontos podem sair */
+  clip-path: inset(-24px 0 -24px 0);
+}
+
+.heroline__plot svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  animation: spark-reveal 1.4s var(--ease-enter) 250ms both;
+}
+
+.heroline__line {
+  fill: none;
+  stroke: var(--violet-400);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* a mesma linha, grossa e desfocada por baixo: brilho néon */
+.heroline__glow {
+  fill: none;
+  stroke: var(--violet-400);
+  stroke-width: 9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.4;
+  filter: blur(7px);
+}
+
+/* medições do dia a dia: entram em cascata */
+.heroline__dot {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -3px;
+  border-radius: 50%;
+  background: var(--ice-100);
+  opacity: 0.8;
+  box-shadow: 0 0 0 2px rgb(7 6 11 / 0.7);
+  animation: dot-pop 360ms var(--ease-enter) calc(720ms + var(--i, 0) * 26ms) both;
+}
+
+/* o ponto de hoje: lima, com um anel que pulsa devagar */
+.heroline__now,
+.sparkline__dot {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
+  border-radius: 50%;
+  background: var(--lime-400);
+  box-shadow: 0 0 0 3px rgb(198 255 51 / 0.25), 0 0 18px rgb(198 255 51 / 0.95);
+  animation: dot-pop 420ms var(--ease-enter) 1.3s both;
+}
+
+.heroline__now::after,
+.sparkline__dot::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 2px solid rgb(198 255 51 / 0.7);
+  animation: live-ring 2.6s ease-out 1.8s infinite;
+}
+
+/* varrimento de luz lento, da esquerda para a direita */
+.heroline__scan {
+  position: absolute;
+  top: -8px;
+  bottom: -4px;
+  left: -90px;
+  width: 90px;
+  background: linear-gradient(90deg, transparent, rgb(198 255 51 / 0.14) 50%, transparent);
+  mix-blend-mode: screen;
+  pointer-events: none;
+  animation: scan 9s linear 2.6s infinite;
+}
+
+@keyframes scan {
+  to {
+    left: 100%;
+  }
+}
+
+.heroline__dates {
+  grid-column: 2;
+  grid-row: 2;
+  display: flex;
+  justify-content: space-between;
+  padding-top: 6px;
+  font-size: 0.75rem;
+  color: var(--ice-300);
+}
+
+/* mini-gráfico (peso) */
 .sparkline {
   position: relative;
   height: 56px;
   margin-top: 6px;
 }
 
-.sparkline--hero {
-  height: 110px;
-  margin-top: 8px;
-}
-
 .sparkline--mini {
   height: 48px;
-}
-
-@media (min-width: 768px) {
-  .sparkline--hero {
-    height: 150px;
-  }
 }
 
 .sparkline svg {
@@ -228,31 +389,6 @@
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
-}
-
-.sparkline--hero .sparkline__line {
-  stroke-width: 2.5;
-}
-
-/* O ponto de "hoje": lima, com um anel que pulsa devagar (a série está viva). */
-.sparkline__dot {
-  position: absolute;
-  width: 9px;
-  height: 9px;
-  margin: -4.5px 0 0 -4.5px;
-  border-radius: 50%;
-  background: var(--lime-400);
-  box-shadow: 0 0 0 3px rgb(198 255 51 / 0.25), 0 0 16px rgb(198 255 51 / 0.9);
-  animation: dot-pop 420ms var(--ease-enter) 1.15s both;
-}
-
-.sparkline__dot::after {
-  content: "";
-  position: absolute;
-  inset: -3px;
-  border-radius: 50%;
-  border: 2px solid rgb(198 255 51 / 0.7);
-  animation: live-ring 2.6s ease-out 1.6s infinite;
 }
 
 @keyframes spark-reveal {
@@ -280,6 +416,13 @@
   100% {
     transform: scale(2.6);
     opacity: 0;
+  }
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
   }
 }
 
@@ -353,9 +496,6 @@
   --pill-bg: var(--lime-400);
   padding: 0;
   color: var(--ink-950);
-  box-shadow:
-    0 -16px 36px -14px rgb(0 0 0 / 0.8),
-    0 18px 44px -16px rgb(198 255 51 / 0.65);
 }
 
 .pill__link {
@@ -369,6 +509,20 @@
   padding: 14px 26px;
   border-radius: inherit;
   color: inherit;
+  box-shadow: 0 18px 44px -16px rgb(198 255 51 / 0.65);
+}
+
+/* a pendente respira */
+@media (prefers-reduced-motion: no-preference) {
+  .pill__link {
+    animation: lime-breathe 2.8s ease-in-out infinite;
+  }
+}
+
+@keyframes lime-breathe {
+  50% {
+    box-shadow: 0 22px 60px -14px rgb(198 255 51 / 1);
+  }
 }
 
 .pill__link .pill__meta {
@@ -506,28 +660,134 @@
 
 .painel__pair {
   display: grid;
-  gap: 16px;
-  margin-top: 40px;
 }
 
 @media (min-width: 1024px) {
   .painel__pair {
     grid-template-columns: 1fr 1fr;
-    gap: 24px;
+    gap: 0 56px;
   }
 }
 
-.pcard {
+.training__body {
   display: grid;
-  align-content: start;
   gap: 16px;
-  padding: 22px;
+  justify-items: start;
 }
 
-@media (min-width: 768px) {
-  .pcard {
-    padding: 26px;
+.training__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.training__name {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  font-weight: 800;
+  font-size: clamp(2rem, 7vw, 2.75rem);
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.training .section-head__meta {
+  white-space: nowrap;
+}
+
+.section-head__meta svg {
+  width: 16px;
+  height: 16px;
+  margin-right: 2px;
+  vertical-align: -3px;
+  color: var(--violet-300);
+}
+
+/* barra de energia (macros) */
+.energy {
+  display: grid;
+  gap: 14px;
+  width: 100%;
+}
+
+.energy__total {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  font-weight: 800;
+  font-size: 2.75rem;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.energy__unit {
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--ice-300);
+}
+
+.energy__bar {
+  display: flex;
+  gap: 4px;
+  height: 22px;
+}
+
+.energy__seg {
+  flex: 0 0 var(--w);
+  min-width: 8px;
+  border-radius: 999px;
+  background: var(--c);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35);
+  transform-origin: left;
+  animation: seg-grow 900ms var(--ease-enter) calc(250ms + var(--i, 0) * 140ms) both;
+}
+
+@keyframes seg-grow {
+  from {
+    transform: scaleX(0);
   }
+}
+
+.energy__legend {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.energy__legend li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.energy__swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.energy__grams {
+  margin-left: auto;
+  font-weight: 600;
+}
+
+.energy__pct {
+  width: 2.5rem;
+  text-align: right;
+  font-size: 0.875rem;
+  color: var(--ice-300);
+}
+
+.energy__note {
+  font-size: 0.875rem;
+  color: var(--ice-300);
 }
 
 /* ------------------------------------------------------------- proporções */
@@ -565,77 +825,6 @@
     padding-left: 48px;
     border-left: 1px solid var(--line);
   }
-}
-
-/* -------------------------------------------------------- anéis macros */
-
-.macro-rings {
-  display: grid;
-  gap: 18px;
-}
-
-.macro-rings__chart {
-  position: relative;
-  width: min(220px, 100%);
-  aspect-ratio: 1;
-  justify-self: center;
-}
-
-.macro-rings__chart svg {
-  width: 100%;
-  height: 100%;
-}
-
-.macro-rings__track,
-.macro-rings__arc {
-  fill: none;
-  stroke-width: 9;
-}
-
-.macro-rings__track {
-  opacity: 0.14;
-}
-
-.macro-rings__arc {
-  stroke-linecap: round;
-  animation: ring-fill 1.3s var(--ease-enter) both;
-  filter: drop-shadow(0 0 4px rgb(0 0 0 / 0.4));
-}
-
-@keyframes ring-fill {
-  from {
-    stroke-dashoffset: var(--c);
-  }
-  to {
-    stroke-dashoffset: var(--to);
-  }
-}
-
-.macro-rings__center {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-content: center;
-  justify-items: center;
-  gap: 4px;
-}
-
-.macro-rings__legend {
-  display: grid;
-  gap: 8px;
-}
-
-.macro-rings__legend li {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.macro-rings__swatch {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  flex: none;
 }
 
 /* ---------------------------------------------------------------- rácio */
@@ -758,6 +947,7 @@
 .exercise-list {
   display: grid;
   gap: 4px;
+  width: 100%;
 }
 
 .exercise-list li {
@@ -780,13 +970,66 @@
   flex: none;
 }
 
+/* ------------------------------------------------- revelar ao fazer scroll */
+/* Sem JavaScript: a animação é conduzida pela entrada do elemento no ecrã.
+   O que já está à vista ao abrir aparece logo no estado final. */
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .section-head h2 {
+      animation: title-wipe linear both;
+      animation-timeline: view();
+      animation-range: entry 5% entry 45%;
+    }
+    .pill {
+      animation: pill-in linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 55%;
+    }
+    .wstat,
+    .ratio,
+    .training__body,
+    .routine li {
+      animation: rise-in linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 40%;
+    }
+    .energy__seg {
+      animation: seg-grow linear both;
+      animation-timeline: view();
+      animation-range: entry 10% entry 70%;
+    }
+    .ratio-meter__fill {
+      animation: meter-fill linear both;
+      animation-timeline: view();
+      animation-range: entry 10% entry 70%;
+    }
+  }
+}
+
+@keyframes pill-in {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .heroline__plot svg,
+  .heroline__dot,
+  .heroline__now,
+  .heroline__now::after,
+  .heroline__scan,
   .sparkline svg,
   .sparkline__dot,
   .sparkline__dot::after,
-  .macro-rings__arc,
+  .deltas__item,
+  .energy__seg,
   .ratio-meter__fill,
-  .liquid {
+  .liquid,
+  .liquid::before,
+  .hero__ghost,
+  .pill__link {
     animation: none;
   }
 }

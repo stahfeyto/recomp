@@ -2,9 +2,7 @@ import { ArrowRight, Check, Dumbbell } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { Suspense, type CSSProperties } from "react";
-import { Scene3D } from "@/components/3d/scene-3d";
 import { ButtonLink } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { CountUp } from "@/components/ui/count-up";
 import { DeltaBadge } from "@/components/ui/delta-badge";
 import { PageHeader } from "@/components/ui/page-header";
@@ -24,7 +22,8 @@ import {
 import type { MeasureKey } from "@/lib/measures";
 import { formatDecimal } from "@/lib/number";
 import { WEEKDAYS } from "@/lib/training";
-import { MacroRings } from "./_painel/macro-rings";
+import { EnergyBar } from "./_painel/energy-bar";
+import { HeroLine } from "./_painel/hero-line";
 import { RatioMeter } from "./_painel/ratio-meter";
 import { Sparkline } from "./_painel/sparkline";
 import { TypeBadge } from "./treino/training-types";
@@ -53,14 +52,14 @@ async function Painel() {
 
   return (
     <div className="stagger painel">
-      <PageHeader eyebrow={formatDateWeekday(d.today)} title={`${d.greeting}, ${d.name}`} actions={<Scene3D variant="orb" />} />
+      <PageHeader eyebrow={formatDateWeekday(d.today)} title={`${d.greeting}, ${d.name}`} />
       <Hero d={d} />
       <Ritual d={d} />
       <Weekly d={d} />
-      <section className="painel__pair" aria-label="Treino e metas">
+      <div className="painel__pair">
         <TodayTraining d={d} />
-        <GoalsCard d={d} />
-      </section>
+        <Goals d={d} />
+      </div>
       <Ratios d={d} />
       <RoutineSection />
     </div>
@@ -88,10 +87,10 @@ function Deltas({ s, k, unit }: { s: AveragedSummary; k: MeasureKey; unit: strin
   if (items.length === 0) return null;
   return (
     <ul className="deltas">
-      {items.map(({ label, c }) => {
+      {items.map(({ label, c }, i) => {
         const tone = toneOf(k, c.trend);
         return (
-          <li key={label} className="deltas__item" data-tone={tone}>
+          <li key={label} className="deltas__item" data-tone={tone} style={{ "--i": i } as CSSProperties}>
             <DeltaBadge tone={tone} delta={c.delta} label={`${formatSigned(c.delta)} ${unit}`} />
             <span>{label}</span>
           </li>
@@ -130,7 +129,7 @@ function Hero({ d }: { d: DashboardData }) {
         ) : (
           <p className="hero__empty">Sem registos ainda. Regista a cintura de hoje para a média começar.</p>
         )}
-        <Sparkline variant="hero" id="waist" label="Média de 7 dias da cintura nas últimas 8 semanas" unit="cm" points={d.waistSpark} />
+        <HeroLine average={d.waistSpark} daily={d.waistDaily} unit="cm" label="Cintura nas últimas 8 semanas: média de 7 dias e medições diárias" />
       </div>
 
       <aside className="hero__side" aria-label="Peso">
@@ -319,15 +318,17 @@ function Weekly({ d }: { d: DashboardData }) {
 function TodayTraining({ d }: { d: DashboardData }) {
   const t = d.training;
   return (
-    <Card className="pcard">
-      <div className="flex items-center justify-between gap-3">
-        <p className="eyebrow">Treino de hoje · {WEEKDAYS[d.weekday]}</p>
-        <Dumbbell className="size-5 text-violet-300" aria-hidden="true" />
-      </div>
+    <section className="training" aria-labelledby="training-title">
+      <header className="section-head section-head--row">
+        <h2 id="training-title">Treino de hoje</h2>
+        <p className="section-head__meta">
+          <Dumbbell aria-hidden="true" /> {WEEKDAYS[d.weekday]}
+        </p>
+      </header>
       {t ? (
-        <>
-          <div className="flex flex-wrap items-center gap-3">
-            <h2 className="text-2xl">{t.title}</h2>
+        <div className="training__body">
+          <div className="training__title">
+            <p className="training__name">{t.title}</p>
             <TypeBadge type={t.type} />
           </div>
           {t.notes && <p className="text-ice-300">{t.notes}</p>}
@@ -349,33 +350,37 @@ function TodayTraining({ d }: { d: DashboardData }) {
               {t.type === "descanso" ? "Dia de descanso: recupera, dorme bem." : "Ainda sem exercícios para este dia."}
             </p>
           )}
-          <ButtonLink href="/treino" variant="ghost" className="justify-self-start">
+          <ButtonLink href="/treino" variant="secondary" className="justify-self-start">
             Ver plano semanal <ArrowRight />
           </ButtonLink>
-        </>
+        </div>
       ) : (
-        <p className="text-ice-300">Sem plano para hoje.</p>
+        <p className="hero__empty">Sem plano para hoje.</p>
       )}
-    </Card>
+    </section>
   );
 }
 
-function GoalsCard({ d }: { d: DashboardData }) {
+function Goals({ d }: { d: DashboardData }) {
   return (
-    <Card className="pcard">
-      <div className="grid gap-1">
-        <p className="eyebrow">Metas · {d.activeGoal?.label ?? "sem meta"}</p>
-        {d.activeGoal && <span className="text-sm text-ice-300">em vigor desde {formatDayMonth(d.activeGoal.effectiveFrom)}</span>}
-      </div>
+    <section className="goals" aria-labelledby="goals-title">
+      <header className="section-head">
+        <h2 id="goals-title">Metas</h2>
+        <p className="section-head__meta">
+          {d.activeGoal ? `${d.activeGoal.label} · em vigor desde ${formatDayMonth(d.activeGoal.effectiveFrom)}` : "sem meta ativa"}
+        </p>
+      </header>
       {d.activeGoal ? (
-        <MacroRings goal={d.activeGoal} weightKg={d.weight?.current.value ?? null} />
+        <div className="training__body">
+          <EnergyBar goal={d.activeGoal} weightKg={d.weight?.current.value ?? null} />
+          <ButtonLink href="/metas" variant="secondary" className="justify-self-start">
+            Ver metas e check-in <ArrowRight />
+          </ButtonLink>
+        </div>
       ) : (
-        <p className="text-ice-300">Ainda não há metas ativas.</p>
+        <p className="hero__empty">Ainda não há metas ativas.</p>
       )}
-      <ButtonLink href="/metas" variant="ghost" className="justify-self-start">
-        Ver metas e check-in <ArrowRight />
-      </ButtonLink>
-    </Card>
+    </section>
   );
 }
 

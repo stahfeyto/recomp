@@ -2,7 +2,7 @@
 
 /* ------------------------------------------------------------- fundo */
 /* Aurora: violeta em cima à esquerda, um sopro de lima em baixo à direita, grain.
-   Gradientes radiais sem filtros (leves no telemóvel). */
+   Gradientes radiais sem filtros e só transformações (leves no telemóvel). */
 
 .app-bg {
   position: fixed;
@@ -51,16 +51,16 @@
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
 }
 
-/* Deriva lenta: só desktop e sem "reduzir movimento" (poupa bateria no telemóvel). */
-@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+/* Deriva lenta (só transform: barata no telemóvel). Parada com "reduzir movimento". */
+@media (prefers-reduced-motion: no-preference) {
   .app-bg__blob--a {
-    animation: drift-a 52s ease-in-out infinite alternate;
+    animation: drift-a 58s ease-in-out infinite alternate;
   }
   .app-bg__blob--b {
-    animation: drift-b 60s ease-in-out infinite alternate;
+    animation: drift-b 66s ease-in-out infinite alternate;
   }
   .app-bg__blob--c {
-    animation: drift-c 68s ease-in-out infinite alternate;
+    animation: drift-c 74s ease-in-out infinite alternate;
   }
 }
 
@@ -147,113 +147,109 @@
 }
 
 /* --------------------------------------------------------------- dock */
+/* Cápsula flutuante: ícones; o item ativo abre-se numa pílula lima com o nome. */
 
 .dock {
   position: fixed;
   z-index: 40;
   left: 50%;
-  bottom: calc(12px + env(safe-area-inset-bottom));
+  bottom: calc(14px + env(safe-area-inset-bottom));
   translate: -50% 0;
-  width: min(480px, calc(100vw - 24px));
+  max-width: calc(100vw - 24px);
   padding: 6px;
-  border-radius: 24px;
+  border-radius: 999px;
+  background: rgb(14 11 23 / 0.86);
+  backdrop-filter: blur(18px) saturate(1.3);
+  box-shadow:
+    inset 0 1px 0 rgb(243 240 255 / 0.08),
+    0 0 0 1px rgb(243 240 255 / 0.08),
+    0 24px 50px -16px rgb(0 0 0 / 0.85);
 }
 
 .dock__list {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  display: flex;
   gap: 2px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
 .dock__link {
   position: relative;
+  isolation: isolate;
   display: block;
-  border-radius: 18px;
+  border-radius: 999px;
   color: var(--ice-300);
   transition: color var(--m-out) var(--ease);
 }
 
 .dock__inner {
-  display: grid;
-  justify-items: center;
-  align-content: center;
-  gap: 4px;
-  min-height: 56px;
-  padding: 6px 2px;
+  display: inline-flex;
+  align-items: center;
+  height: 52px;
+  padding: 0 15px;
+}
+
+.dock__pill {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--lime-400);
+  box-shadow: 0 10px 26px -8px rgb(198 255 51 / 0.8);
 }
 
 .dock__link[aria-current="page"] {
-  color: var(--ice-100);
+  color: var(--ink-950);
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .dock__link:hover {
+  .dock__link:not([aria-current="page"]):hover {
     color: var(--ice-100);
     transition-duration: var(--m-in);
   }
 }
 
-/* Indicador: pastilha violeta que desliza entre itens, com um traço lima por baixo */
-.dock__indicator {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: inherit;
-  background: rgb(125 57 235 / 0.36);
-  box-shadow:
-    inset 0 0 0 1px rgb(155 107 255 / 0.5),
-    0 0 28px -6px rgb(125 57 235 / 0.9);
-}
-
-.dock__indicator::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: 4px;
-  width: 14px;
-  height: 3px;
-  margin-left: -7px;
-  border-radius: 3px;
-  background: var(--lime-400);
-  box-shadow: 0 0 10px rgb(198 255 51 / 0.8);
-}
-
 .dock__icon {
   width: 22px;
   height: 22px;
+  flex: none;
 }
 
+/* O nome só aparece no item ativo (telemóvel); abre-se com a pílula. */
 .dock__label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  line-height: 1;
+  max-width: 0;
+  margin-left: 0;
+  opacity: 0;
+  overflow: hidden;
   white-space: nowrap;
+  font-size: 0.875rem;
+  font-weight: 700;
+  transition:
+    max-width 320ms var(--ease),
+    margin-left 320ms var(--ease),
+    opacity 200ms var(--ease);
 }
 
-/* Desktop: barra lateral vertical. */
+.dock__link[aria-current="page"] .dock__label {
+  max-width: 120px;
+  margin-left: 8px;
+  opacity: 1;
+}
+
+/* PC: os nomes estão sempre à vista. */
 @media (min-width: 1024px) {
   .dock {
-    left: 16px;
-    top: 50%;
-    bottom: auto;
-    translate: 0 -50%;
-    width: var(--rail-w);
-    padding: 8px;
-  }
-  .dock__list {
-    grid-template-columns: 1fr;
-    gap: 4px;
+    bottom: 20px;
   }
   .dock__inner {
-    min-height: 68px;
+    height: 56px;
+    padding: 0 18px;
   }
-  .dock__indicator::after {
-    left: 4px;
-    top: 50%;
-    bottom: auto;
-    width: 3px;
-    height: 18px;
-    margin: -9px 0 0;
+  .dock__label {
+    max-width: 140px;
+    margin-left: 8px;
+    opacity: 1;
   }
 }
 
@@ -268,14 +264,8 @@
 }
 
 @media (min-width: 1024px) {
-  .app-header {
-    max-width: calc(1200px + var(--rail-w) + 32px);
-    padding-left: calc(var(--rail-w) + 32px + var(--gutter));
-  }
   .app-main {
-    max-width: calc(1200px + var(--rail-w) + 32px);
-    padding-left: calc(var(--rail-w) + 32px + var(--gutter));
-    padding-bottom: 64px;
+    padding-bottom: calc(var(--dock-h) + 48px);
   }
 }
 
