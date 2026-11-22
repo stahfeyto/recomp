@@ -2,7 +2,6 @@ import { History } from "lucide-react";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { ButtonLink } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StreakChip } from "@/components/ui/streak";
@@ -14,9 +13,13 @@ import { TodayForm } from "./today-form";
 
 export const metadata: Metadata = { title: "Registar · RECOMP" };
 
+/**
+ * Registar: um "mostrador" para o peso e a cintura (botões redondos ±, número
+ * grande) e, por baixo de uma régua, as medidas completas da semana.
+ */
 export default function RegistarPage() {
   return (
-    <div className="stagger">
+    <div className="stagger registar">
       <PageHeader eyebrow="Registo" title="Registar hoje" description="Peso e cintura todas as manhãs. Braço, peito e ombros 1× por semana." />
       <Suspense fallback={<RegistarSkeleton />}>
         <RegistarContent />
@@ -28,39 +31,41 @@ export default function RegistarPage() {
 async function RegistarContent() {
   const data = await getTodayData();
   return (
-    <div className="registar">
-      <Card className="registar__card" spotlight={false}>
-        <h2 className="registar__step">
-          <span className="registar__step-n">1</span> Peso e cintura de hoje
-          <StreakChip days={data.streak} className="registar__step-hint" />
-        </h2>
+    <>
+      <section className="dial" aria-labelledby="dial-title">
+        <header className="section-head section-head--first section-head--row">
+          <h2 id="dial-title">Peso e cintura</h2>
+          <StreakChip days={data.streak} />
+        </header>
         <TodayForm data={data} />
-      </Card>
+      </section>
 
-      <Card className="registar__card" spotlight={false}>
-        <h2 className="registar__step">
-          <span className="registar__step-n">2</span> Medidas completas
-          <span className="registar__step-hint">1× por semana</span>
-        </h2>
+      <section className="full" aria-labelledby="full-title">
+        <header className="section-head">
+          <h2 id="full-title">Medidas completas</h2>
+          <p className="section-head__meta">1× por semana: braço, peito, ombros e extras.</p>
+        </header>
         <MeasurementForm today={data.today} lastValues={data.lastValues} />
-      </Card>
+      </section>
 
-      <ButtonLink href="/medidas" variant="ghost" className="justify-self-start">
+      <ButtonLink href="/medidas" variant="ghost" className="registar__history">
         <History /> Ver histórico e editar registos
       </ButtonLink>
-    </div>
+    </>
   );
 }
 
 function RegistarSkeleton() {
   return (
-    <div className="registar" aria-busy="true" aria-label="A carregar">
-      <Card className="registar__card grid gap-4" spotlight={false}>
-        <Skeleton width="50%" height={20} />
-        <Skeleton height={64} radius={14} />
-        <Skeleton height={64} radius={14} />
-        <Skeleton height={52} radius={14} />
-      </Card>
+    <div className="dial" aria-busy="true" aria-label="A carregar">
+      <Skeleton width="40%" height={28} radius={8} />
+      <div className="grid gap-4">
+        <Skeleton width="20%" height={18} />
+        <Skeleton height={84} radius={24} />
+        <Skeleton width="20%" height={18} />
+        <Skeleton height={84} radius={24} />
+        <Skeleton height={54} radius={16} />
+      </div>
     </div>
   );
 }

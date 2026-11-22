@@ -11,11 +11,14 @@ export function Sparkline({
   unit,
   label,
   id,
+  variant = "md",
 }: {
   points: Point[];
   unit: string;
   label: string;
   id: string;
+  /** "hero": alto e de largura total (cintura no Painel); "mini": baixo (peso ao lado). */
+  variant?: "hero" | "mini" | "md";
 }) {
   if (points.length < 2) {
     return <p className="text-sm text-ice-300">A tendência aparece a partir do segundo registo.</p>;
@@ -44,7 +47,7 @@ export function Sparkline({
   const last = points[points.length - 1];
 
   return (
-    <figure className="sparkline">
+    <figure className={variant === "md" ? "sparkline" : `sparkline sparkline--${variant}`}>
       <svg
         viewBox={`0 0 ${W} ${H}`}
         preserveAspectRatio="none"
@@ -53,7 +56,7 @@ export function Sparkline({
       >
         <defs>
           <linearGradient id={`spark-${id}`} x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0%" stopColor="var(--violet-400)" stopOpacity="0.35" />
+            <stop offset="0%" stopColor="var(--violet-400)" stopOpacity={variant === "hero" ? "0.45" : "0.35"} />
             <stop offset="100%" stopColor="var(--violet-400)" stopOpacity="0" />
           </linearGradient>
         </defs>

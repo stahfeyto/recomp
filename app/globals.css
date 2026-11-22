@@ -539,6 +539,38 @@ input,
     animation: title-wipe 720ms var(--ease-enter) both;
   }
 
+  /* Cabeçalho de secção: título grande e uma nota, por cima de uma régua.
+     Substitui os cartões onde não há nada para carregar. */
+  .section-head {
+    display: grid;
+    gap: 4px;
+    justify-items: start;
+    margin-top: 40px;
+    padding-top: 18px;
+    border-top: 1px solid var(--line);
+  }
+  .section-head h2 {
+    font-size: clamp(1.5rem, 4.5vw, 2rem);
+  }
+  .section-head__meta {
+    max-width: 48ch;
+    font-size: 0.875rem;
+    color: var(--ice-300);
+  }
+  .section-head--first {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+  }
+  /* título à esquerda e uma etiqueta à direita (ex.: dias seguidos) */
+  .section-head--row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 16px;
+  }
+
   /* ------------------------------------------------------------ sequência */
 
   .streak {
@@ -828,11 +860,12 @@ input,
   z-index: -1;
   animation: fade-in 1.2s var(--ease) 150ms both;
 }
-/* Nó do Painel: decorativo, com margens negativas para não aumentar o cabeçalho. */
+/* Nó do Painel (desktop): cromado violeta/lima a flutuar no canto, com margens
+   negativas para não aumentar o cabeçalho. */
 .scene--orb {
-  width: 150px;
-  height: 150px;
-  margin: -16px -8px -28px 0;
+  width: 240px;
+  height: 240px;
+  margin: -56px -40px -96px 0;
 }
 
 /* --------------------------------------------- transição depois do login */

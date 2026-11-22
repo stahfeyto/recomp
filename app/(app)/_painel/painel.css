@@ -1,127 +1,218 @@
-/* Painel: grelha bento e componentes do painel. */
+/* Painel em cartaz: a cintura em grande, o ritual de hoje em pílulas empilhadas,
+   as medidas da semana em colunas com réguas. Cartões (vidro) só no treino e nas
+   metas, que têm ações. */
 
-.bento {
+.painel {
   display: grid;
-  gap: 12px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  /* Topo: cintura, peso e próximo check-in. O resto vem depois. */
-  grid-template-areas:
-    "waist waist"
-    "weight weight"
-    "checkin checkin"
-    "training training"
-    "macros macros"
-    "arm arm"
-    "chest chest"
-    "shoulders shoulders"
-    "ratio ratio"
-    "whr whr"
-    "routine routine";
+  gap: 4px;
 }
 
-@media (min-width: 768px) {
-  .bento {
-    gap: 16px;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    grid-template-areas:
-      "waist waist waist weight weight weight"
-      "checkin checkin checkin training training training"
-      "arm arm chest chest shoulders shoulders"
-      "macros macros macros ratio ratio ratio"
-      "macros macros macros whr whr whr"
-      "routine routine routine routine routine routine";
-  }
-}
+/* ------------------------------------------------------------------ herói */
 
-@media (min-width: 1200px) {
-  .bento {
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-    grid-template-areas:
-      "waist waist waist waist weight weight weight weight checkin checkin checkin checkin"
-      "training training training training training training macros macros macros macros macros macros"
-      "arm arm arm arm chest chest chest chest shoulders shoulders shoulders shoulders"
-      "ratio ratio ratio ratio whr whr whr whr routine routine routine routine";
-  }
-}
-
-.bento__waist { grid-area: waist; }
-.bento__weight { grid-area: weight; }
-.bento__macros { grid-area: macros; }
-.bento__arm { grid-area: arm; }
-.bento__chest { grid-area: chest; }
-.bento__shoulders { grid-area: shoulders; }
-.bento__ratio { grid-area: ratio; }
-.bento__whr { grid-area: whr; }
-.bento__checkin { grid-area: checkin; }
-.bento__training { grid-area: training; }
-.bento__routine { grid-area: routine; }
-
-/* ---------------------------------------------------------------- KPI */
-
-.kpi {
+.hero {
+  position: relative;
   display: grid;
+  gap: 28px;
+  padding: 4px 0 8px;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* A palavra em contorno, enorme, atrás do número (textura de cartaz). */
+.hero__ghost {
+  position: absolute;
+  right: -0.03em;
+  top: -0.1em;
+  z-index: -2;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(6rem, 30vw, 19rem);
+  line-height: 1;
+  letter-spacing: -0.05em;
+  color: transparent;
+  -webkit-text-stroke: 1px rgb(243 240 255 / 0.085);
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+}
+
+.hero__main,
+.hero__side {
+  display: grid;
+  gap: 14px;
   align-content: start;
+}
+
+.hero__label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 10px;
-  padding: 20px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--ice-300);
 }
 
-@media (min-width: 768px) {
-  .kpi {
-    padding: 24px;
-  }
+/* etiqueta de fiabilidade da média */
+.tag {
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+  background: rgb(125 57 235 / 0.3);
+  color: var(--ice-100);
 }
 
-.kpi__value {
+.tag[data-tone="outline"] {
+  background: transparent;
+  border: 1px dashed var(--line-strong);
+  color: var(--ice-300);
+}
+
+.hero__value {
   display: flex;
   align-items: baseline;
-  gap: 8px;
+  gap: 0.08em;
   font-family: var(--font-display);
   font-optical-sizing: auto;
   font-weight: 800;
-  font-size: clamp(2.125rem, 6.5vw, 2.75rem);
-  line-height: 1;
+  font-size: clamp(5.5rem, 27vw, 13rem);
+  line-height: 0.9;
+  letter-spacing: -0.055em;
+}
+
+.hero__value--sm {
+  font-size: clamp(2.75rem, 11vw, 4.5rem);
   letter-spacing: -0.04em;
 }
 
-.kpi--lg .kpi__value {
-  font-size: clamp(3.25rem, 13vw, 5rem);
-}
-
-.kpi__unit {
-  font-size: 0.42em;
-  font-weight: 600;
-  color: var(--ice-300);
+.hero__unit {
+  font-size: 0.26em;
+  font-weight: 700;
   letter-spacing: -0.01em;
+  color: var(--ice-300);
 }
 
-.kpi__deltas {
+.hero__value--sm .hero__unit {
+  font-size: 0.4em;
+}
+
+.hero__note,
+.hero__empty {
+  font-size: 0.9375rem;
+  color: var(--ice-300);
+  max-width: 46ch;
+}
+
+/* variações em pílulas */
+.deltas {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 16px;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
-.kpi__deltas li {
+.deltas__item {
   display: inline-flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0 6px;
-}
-
-.kpi__deltas .delta {
-  white-space: nowrap;
-}
-
-.kpi__note {
-  font-size: 0.8125rem;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 0 12px 0 10px;
+  border-radius: 999px;
+  background: rgb(243 240 255 / 0.06);
+  font-size: 0.875rem;
   color: var(--ice-300);
 }
 
-/* ---------------------------------------------------------- sparkline */
+.deltas__item[data-tone="good"] {
+  background: rgb(198 255 51 / 0.12);
+}
+
+.deltas__item[data-tone="bad"] {
+  background: rgb(255 92 108 / 0.12);
+}
+
+.deltas__item .delta {
+  font-size: 0.9375rem;
+}
+
+/* "líquido": mancha violeta com um reflexo lima, atrás do número, a respirar
+   devagar. Telemóvel e tablet; no desktop é o nó 3D em cromado. */
+.liquid {
+  position: absolute;
+  z-index: -1;
+  right: -46px;
+  top: -16px;
+  width: 230px;
+  height: 230px;
+  border-radius: 58% 42% 55% 45% / 48% 58% 42% 52%;
+  background:
+    radial-gradient(circle at 28% 30%, rgb(198 255 51 / 0.5), transparent 40%),
+    radial-gradient(circle at 68% 66%, rgb(155 107 255 / 0.9), rgb(125 57 235 / 0.5) 45%, transparent 72%);
+  filter: blur(16px);
+  opacity: 0.85;
+  pointer-events: none;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .liquid {
+    animation: liquid 16s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes liquid {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+  }
+  50% {
+    transform: translate3d(-14px, 14px, 0) rotate(14deg) scale(1.06);
+  }
+  100% {
+    transform: translate3d(8px, -10px, 0) rotate(-10deg) scale(0.96);
+  }
+}
+
+@media (min-width: 1024px) {
+  .hero {
+    grid-template-columns: minmax(0, 1fr) 300px;
+    gap: 56px;
+    align-items: end;
+    padding: 8px 0 16px;
+  }
+  .hero__side {
+    padding-left: 32px;
+    border-left: 1px solid var(--line);
+  }
+  .liquid {
+    display: none;
+  }
+}
+
+/* ---------------------------------------------------------- mini-gráficos */
 
 .sparkline {
   position: relative;
   height: 56px;
   margin-top: 6px;
+}
+
+.sparkline--hero {
+  height: 110px;
+  margin-top: 8px;
+}
+
+.sparkline--mini {
+  height: 48px;
+}
+
+@media (min-width: 768px) {
+  .sparkline--hero {
+    height: 150px;
+  }
 }
 
 .sparkline svg {
@@ -137,6 +228,10 @@
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+
+.sparkline--hero .sparkline__line {
+  stroke-width: 2.5;
 }
 
 /* O ponto de "hoje": lima, com um anel que pulsa devagar (a série está viva). */
@@ -160,6 +255,15 @@
   animation: live-ring 2.6s ease-out 1.6s infinite;
 }
 
+@keyframes spark-reveal {
+  from {
+    clip-path: inset(-10px 100% -10px 0);
+  }
+  to {
+    clip-path: inset(-10px 0 -10px 0);
+  }
+}
+
 @keyframes dot-pop {
   from {
     transform: scale(0);
@@ -179,12 +283,287 @@
   }
 }
 
-@keyframes spark-reveal {
-  from {
-    clip-path: inset(-10px 100% -10px 0);
+/* ------------------------------------------------------------------- hoje */
+
+.ritual__grid {
+  display: grid;
+  gap: 28px;
+}
+
+/* Pílulas empilhadas (sobrepõem-se um pouco, como cartas): as feitas em ameixa,
+   a pendente em lima e é um link para o Registar. */
+.pills {
+  display: grid;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pill {
+  position: relative;
+  z-index: calc(1 + var(--i, 0));
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 16px;
+  min-height: 68px;
+  padding: 14px 26px;
+  border-radius: 999px;
+  background: var(--pill-bg, var(--ink-800));
+  box-shadow:
+    inset 0 1px 0 rgb(243 240 255 / 0.06),
+    0 -16px 36px -14px rgb(0 0 0 / 0.8);
+  font-size: 1.0625rem;
+  font-weight: 600;
+}
+
+.pill + .pill {
+  margin-top: -18px;
+}
+
+.pill[data-state="done"]:nth-child(odd) {
+  --pill-bg: #1a1430;
+}
+
+.pill[data-state="done"]:nth-child(even) {
+  --pill-bg: #251c3f;
+}
+
+.pill__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--ice-300);
+}
+
+.pill__meta svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+
+.pill[data-state="done"] .pill__meta svg {
+  color: var(--lime-400);
+}
+
+.pill[data-state="todo"] {
+  --pill-bg: var(--lime-400);
+  padding: 0;
+  color: var(--ink-950);
+  box-shadow:
+    0 -16px 36px -14px rgb(0 0 0 / 0.8),
+    0 18px 44px -16px rgb(198 255 51 / 0.65);
+}
+
+.pill__link {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 16px;
+  width: 100%;
+  min-height: 68px;
+  padding: 14px 26px;
+  border-radius: inherit;
+  color: inherit;
+}
+
+.pill__link .pill__meta {
+  color: inherit;
+  font-weight: 600;
+}
+
+.pill__link svg {
+  transition: transform var(--m-in) var(--ease);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .pill__link:hover svg {
+    transform: translateX(4px);
   }
-  to {
-    clip-path: inset(-10px 0 -10px 0);
+}
+
+.pill__link:focus-visible {
+  outline-offset: -3px;
+  outline-color: var(--ink-950);
+}
+
+.checkin {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  justify-items: start;
+}
+
+.checkin__value {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  font-weight: 800;
+  font-size: 3rem;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.checkin__unit {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 1rem;
+  letter-spacing: 0;
+  color: var(--ice-300);
+}
+
+.checkin__due {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.5rem;
+  color: var(--lime-400);
+}
+
+@media (min-width: 1024px) {
+  .ritual__grid {
+    grid-template-columns: minmax(0, 1fr) 300px;
+    gap: 56px;
+    align-items: start;
+  }
+  .checkin {
+    padding-left: 32px;
+    border-left: 1px solid var(--line);
+  }
+}
+
+/* ----------------------------------------------------------------- semana */
+
+.weekly__grid {
+  display: grid;
+}
+
+.wstat {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  padding: 18px 0;
+  border-top: 1px solid var(--line);
+}
+
+.wstat:first-child {
+  border-top: 0;
+  padding-top: 4px;
+}
+
+.wstat__sub {
+  font-weight: 500;
+}
+
+.wstat__value {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  font-weight: 800;
+  font-size: clamp(2.5rem, 9vw, 3.5rem);
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.wstat__value .hero__unit {
+  font-size: 0.4em;
+}
+
+.wstat__delta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 0.875rem;
+  color: var(--ice-300);
+}
+
+.wstat__note {
+  font-size: 0.875rem;
+  color: var(--ice-300);
+}
+
+@media (min-width: 768px) {
+  .weekly__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .wstat {
+    border-top: 0;
+    padding: 4px 0 0;
+  }
+  .wstat + .wstat {
+    padding-left: 28px;
+    margin-left: 28px;
+    border-left: 1px solid var(--line);
+  }
+}
+
+/* -------------------------------------------------------- treino e metas */
+
+.painel__pair {
+  display: grid;
+  gap: 16px;
+  margin-top: 40px;
+}
+
+@media (min-width: 1024px) {
+  .painel__pair {
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+}
+
+.pcard {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+  padding: 22px;
+}
+
+@media (min-width: 768px) {
+  .pcard {
+    padding: 26px;
+  }
+}
+
+/* ------------------------------------------------------------- proporções */
+
+.ratios {
+  display: grid;
+  gap: 28px;
+}
+
+.ratio {
+  display: grid;
+  gap: 10px;
+}
+
+.ratio__value {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  font-weight: 800;
+  font-size: 2.75rem;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.ratio__note {
+  font-size: 0.875rem;
+  color: var(--ice-300);
+}
+
+@media (min-width: 768px) {
+  .ratios {
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+  }
+  .ratio + .ratio {
+    padding-left: 48px;
+    border-left: 1px solid var(--line);
   }
 }
 
@@ -259,7 +638,7 @@
   flex: none;
 }
 
-/* ---------------------------------------------------------- rácio */
+/* ---------------------------------------------------------------- rácio */
 
 .ratio-meter {
   display: grid;
@@ -340,39 +719,21 @@
   white-space: nowrap;
 }
 
-/* --------------------------------------------------- check-in / rotina */
-
-.checklist {
-  display: grid;
-  gap: 6px;
-}
-
-.checklist li {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 10px 12px;
-  border-radius: var(--r-sm);
-  background: rgb(243 240 255 / 0.04);
-}
-
-.checklist li span {
-  font-size: 0.8125rem;
-  color: var(--ice-300);
-}
-
-.checklist li[data-due="true"] {
-  box-shadow: inset 2px 0 0 var(--lime-400);
-}
-
-.checklist li[data-due="true"] span {
-  color: var(--lime-400);
-}
+/* ------------------------------------------------------- rotina e treino */
 
 .routine {
   display: grid;
   gap: 10px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+@media (min-width: 768px) {
+  .routine {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 40px;
+  }
 }
 
 .routine li {
@@ -392,7 +753,6 @@
   border: 2px solid var(--violet-400);
 }
 
-/* ------------------------------------------------------- treino */
 /* A etiqueta de tipo de dia (.type-badge) está em globals.css: é usada também em /treino. */
 
 .exercise-list {
@@ -423,26 +783,10 @@
 @media (prefers-reduced-motion: reduce) {
   .sparkline svg,
   .sparkline__dot,
+  .sparkline__dot::after,
   .macro-rings__arc,
-  .ratio-meter__fill {
+  .ratio-meter__fill,
+  .liquid {
     animation: none;
   }
-}
-
-/* Etiqueta de fiabilidade da média (ex.: "média de 7 dias · 6", "poucos dados") */
-.kpi__badge {
-  padding: 3px 10px;
-  border-radius: 999px;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  background: rgb(125 57 235 / 0.3);
-  color: var(--ice-100);
-  white-space: nowrap;
-}
-
-/* "poucos dados" / "medição única": informação, não alarme */
-.kpi__badge[data-tone="warn"] {
-  background: transparent;
-  border: 1px dashed var(--line-strong);
-  color: var(--ice-300);
 }
