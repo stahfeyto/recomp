@@ -19,7 +19,7 @@ export function EndLabel(props: {
       x={Number(x) + 8}
       y={Number(y)}
       dy={4}
-      fill="#DCE6FF"
+      fill="#F3F0FF"
       fontSize={12}
       fontWeight={600}
       style={{ fontVariantNumeric: "tabular-nums" }}

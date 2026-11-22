@@ -3,7 +3,7 @@ import { desc } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { lastKnownValues } from "@/lib/calculations";
 import { todayISO } from "@/lib/dates";
-import { currentWindow, lastAt, seriesOf, shiftISODate, weightSeries } from "@/lib/metrics";
+import { currentWindow, lastAt, seriesOf, shiftISODate, weightSeries, streakDays } from "@/lib/metrics";
 import { requireSession } from "@/lib/session";
 
 /** Registo de medidas no formato enviado aos componentes de cliente (sem timestamps). */
@@ -49,9 +49,18 @@ export async function getTodayData() {
   const waists = seriesOf(measurements, (r) => r.waistCm);
 
   const valueOn = (pts: typeof weights, date: string) => pts.find((p) => p.date === date)?.value ?? null;
+  // Dias seguidos com registo (só para mostrar; não entra em cálculos).
+  const streak = streakDays(
+    [
+      ...measurements.filter((m) => m.waistCm != null || m.weightKg != null).map((m) => m.date),
+      ...dailyWeights.map((w) => w.date),
+    ],
+    today,
+  );
 
   return {
     today,
+    streak,
     weight: {
       today: dailyWeights.find((w) => w.date === today)?.weightKg ?? null,
       yesterday: valueOn(weights, yesterday),

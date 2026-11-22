@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Scene3D } from "@/components/3d/scene-3d";
+import { Mark } from "@/components/brand/mark";
 import { LoginForm } from "./login-form";
 import "./login.css";
 
@@ -14,6 +15,7 @@ export default function LoginPage() {
       <div className="login-arc" aria-hidden="true" />
       <Scene3D variant="login" />
       <div className="login-content">
+        <Mark size={76} draw className="login-mark" />
         <h1 className="login-wordmark">RECOMP</h1>
         <p className="login-lead">Cintura a descer, braço a subir.</p>
         <Suspense fallback={<div className="glass glass--strong login-card login-card--placeholder" />}>

@@ -64,14 +64,14 @@ export function RatioChart({
               label={{ value: `ideal ${fmt2(ideal)}`, position: "insideTopRight", fill: CHART.axis, fontSize: 11 }}
             />
             <Tooltip
-              cursor={{ stroke: "rgba(220,230,255,0.35)", strokeWidth: 1 }}
+              cursor={{ stroke: "rgba(243,240,255,0.35)", strokeWidth: 1 }}
               content={(p) => {
                 const { active, label, payload } = p as unknown as TP;
                 if (!active || !payload?.length || label === undefined) return null;
                 return (
                   <ChartTooltipBox
                     time={label}
-                    rows={[{ key: "r", label: "Ombros / cintura", color: CHART.cobalt, value: fmt2(payload[0].payload.ratio) }]}
+                    rows={[{ key: "r", label: "Ombros / cintura", color: CHART.violet, value: fmt2(payload[0].payload.ratio) }]}
                   />
                 );
               }}
@@ -79,10 +79,10 @@ export function RatioChart({
             <Line
               type="linear"
               dataKey="ratio"
-              stroke={CHART.cobalt}
+              stroke={CHART.violet}
               strokeWidth={2}
-              dot={rows.length <= 12 ? { r: 4, fill: CHART.cobalt, stroke: CHART.surface, strokeWidth: 2 } : false}
-              activeDot={{ r: 5, stroke: CHART.surface, strokeWidth: 2, fill: CHART.cobalt }}
+              dot={rows.length <= 12 ? { r: 4, fill: CHART.violet, stroke: CHART.surface, strokeWidth: 2 } : false}
+              activeDot={{ r: 5, stroke: CHART.surface, strokeWidth: 2, fill: CHART.violet }}
               isAnimationActive={false}
               label={(props) => <EndLabel {...props} lastIndex={last} text={fmt2} />}
             />

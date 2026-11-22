@@ -6,6 +6,7 @@ import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StreakChip } from "@/components/ui/streak";
 import { SHOULDER_WAIST_IDEAL, WAIST_HEIGHT_HEALTHY } from "@/lib/calculations";
 import { getDashboardData, type DashboardData } from "@/lib/data/dashboard";
 import { formatDateWeekday, formatDayMonth } from "@/lib/format";
@@ -218,7 +219,7 @@ function CheckInCard({ d }: { d: DashboardData }) {
     <Card className="bento__checkin grid content-start gap-4 p-6">
       <div className="flex items-center justify-between gap-3">
         <p className="eyebrow">Próximo check-in</p>
-        <CalendarClock className="size-5 text-cobalt-300" aria-hidden="true" />
+        {d.streak > 0 ? <StreakChip days={d.streak} /> : <CalendarClock className="size-5 text-violet-300" aria-hidden="true" />}
       </div>
       {c ? (
         c.daysLeft > 0 ? (
@@ -229,7 +230,7 @@ function CheckInCard({ d }: { d: DashboardData }) {
             </span>
           </p>
         ) : (
-          <p className="font-display text-xl font-bold text-acid-400">Check-in disponível</p>
+          <p className="font-display text-xl font-bold text-lime-400">Check-in disponível</p>
         )
       ) : (
         <p className="text-ice-300">Define uma meta para começar a contagem.</p>
@@ -258,7 +259,7 @@ function CheckInCard({ d }: { d: DashboardData }) {
         </ul>
       </div>
       {c && c.daysLeft <= 0 ? (
-        <ButtonLink href="/metas" variant="acid" className="justify-self-start">
+        <ButtonLink href="/metas" variant="lime" className="justify-self-start">
           Ver recomendação <ArrowRight />
         </ButtonLink>
       ) : (
@@ -276,7 +277,7 @@ function TodayTraining({ d }: { d: DashboardData }) {
     <Card className="bento__training grid content-start gap-4 p-6">
       <div className="flex items-center justify-between gap-3">
         <p className="eyebrow">Treino de hoje · {WEEKDAYS[d.weekday]}</p>
-        <Dumbbell className="size-5 text-cobalt-300" aria-hidden="true" />
+        <Dumbbell className="size-5 text-violet-300" aria-hidden="true" />
       </div>
       {t ? (
         <>
@@ -293,7 +294,7 @@ function TodayTraining({ d }: { d: DashboardData }) {
                   <span className="font-medium">{e.name}</span>
                   <span className="num ml-auto text-sm text-ice-300">
                     {[e.sets && `${e.sets} ×`, e.reps].filter(Boolean).join(" ")}
-                    {e.toFailure && <span className="text-acid-400"> · até à falha</span>}
+                    {e.toFailure && <span className="text-lime-400"> · até à falha</span>}
                   </span>
                 </li>
               ))}
@@ -326,7 +327,7 @@ function RoutineCard() {
     <Card className="bento__routine grid content-start gap-4 p-6">
       <div className="flex items-center justify-between gap-3">
         <p className="eyebrow">Rotina</p>
-        <ListChecks className="size-5 text-cobalt-300" aria-hidden="true" />
+        <ListChecks className="size-5 text-violet-300" aria-hidden="true" />
       </div>
       <ul className="routine">
         {items.map((i) => (

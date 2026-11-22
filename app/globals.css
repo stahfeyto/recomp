@@ -2,39 +2,50 @@
 
 /* ============================================================================
  * RECOMP — design system
- * Cores: secção 8.2 do prompt. Movimento: tempos e curvas da skill
- * design-taste-frontend (hover 150/120 ms, press 90 ms, sem overshoot).
+ * Fundo "void" com tinta violeta, superfícies ameixa. Violeta faz a estrutura
+ * (botões, item ativo, linhas); lima aparece só onde há vitória ou ação
+ * (variações boas, recordes, "Guardar", o ponto de hoje); coral só na
+ * tendência má. Movimento: hover 150/120 ms, press 90 ms; molas só a responder
+ * ao toque; uma sequência de entrada por página, nunca ao fazer scroll.
  * ========================================================================== */
 
 :root {
-  /* Paleta 8.2 */
-  --ink-950: #05060d;
-  --ink-900: #0a0d1f;
-  --ink-800: #121735;
-  --cobalt-600: #1b2cff; /* fundos de botão (texto branco ≈ 7,4:1); nunca texto sobre ink */
-  --cobalt-400: #4b63ff; /* hover, glows, linhas de gráfico, texto grande */
-  --ice-100: #dce6ff; /* texto principal */
-  --ice-300: #b3c3ee; /* texto secundário (contraste reforçado para ler ao sol) */
-  --vermillion-500: #ff4a2b;
-  --acid-400: #d7ff3a;
-  --success: #3df5a6;
+  /* Fundos */
+  --ink-950: #07060b;
+  --ink-900: #0e0b17;
+  --ink-800: #181327;
+  --ink-700: #241c3a;
 
-  /* Derivados para texto pequeno (WCAG AA sobre ink-900/800) */
-  --cobalt-300: #8193ff; /* ≈ 7:1 */
-  --vermillion-300: #ff8a73; /* ≈ 7:1 */
+  /* Violeta: estrutura */
+  --violet-600: #6a2bd9; /* pressionado, fim de gradiente */
+  --violet-500: #7d39eb; /* botão primário (texto branco ≈ 5,8:1) */
+  --violet-400: #9b6bff; /* brilhos, linhas de gráfico, ícones, texto grande */
+  --violet-300: #b99cff; /* texto pequeno violeta (≈ 8:1 sobre ink) */
+
+  /* Lima: vitória e ação principal */
+  --lime-400: #c6ff33; /* texto preto por cima ≈ 16:1 */
+  --lime-300: #d9ff70;
+
+  /* Coral: tendência má */
+  --coral-500: #ff5c6c;
+  --coral-300: #ff93a0;
+
+  /* Texto */
+  --ice-100: #f3f0ff;
+  --ice-300: #b8b0d4; /* secundário (≈ 8,8:1 sobre ameixa; lê-se ao sol) */
 
   /* Superfícies */
-  --line: rgb(220 230 255 / 0.16);
-  --line-strong: rgb(220 230 255 / 0.22);
-  --glass-bg: rgb(18 23 53 / 0.74);
-  --glass-bg-strong: rgb(18 23 53 / 0.88);
-  --field-bg: rgb(5 6 13 / 0.6);
+  --line: rgb(243 240 255 / 0.12);
+  --line-strong: rgb(243 240 255 / 0.2);
+  --glass-bg: rgb(24 19 39 / 0.78);
+  --glass-bg-strong: rgb(20 16 34 / 0.9);
+  --field-bg: rgb(7 6 11 / 0.55);
 
   /* Raios */
   --r-sm: 10px;
   --r-md: 14px;
-  --r-lg: 20px;
-  --r-xl: 28px;
+  --r-lg: 22px;
+  --r-xl: 30px;
 
   /* Movimento */
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -66,24 +77,26 @@
   --color-ink-950: var(--ink-950);
   --color-ink-900: var(--ink-900);
   --color-ink-800: var(--ink-800);
-  --color-cobalt-600: var(--cobalt-600);
-  --color-cobalt-400: var(--cobalt-400);
-  --color-cobalt-300: var(--cobalt-300);
+  --color-ink-700: var(--ink-700);
+  --color-violet-600: var(--violet-600);
+  --color-violet-500: var(--violet-500);
+  --color-violet-400: var(--violet-400);
+  --color-violet-300: var(--violet-300);
+  --color-lime-400: var(--lime-400);
+  --color-lime-300: var(--lime-300);
+  --color-coral-500: var(--coral-500);
+  --color-coral-300: var(--coral-300);
   --color-ice-100: var(--ice-100);
   --color-ice-300: var(--ice-300);
-  --color-vermillion-500: var(--vermillion-500);
-  --color-vermillion-300: var(--vermillion-300);
-  --color-acid-400: var(--acid-400);
-  --color-success: var(--success);
   --color-line: var(--line);
 
-  /* Macros: proteína = cobalto, hidratos = acid, gordura = vermillion */
-  --color-protein: var(--cobalt-400);
-  --color-carbs: var(--acid-400);
-  --color-fat: var(--vermillion-500);
+  /* Macros: proteína = violeta, hidratos = lima, gordura = coral */
+  --color-protein: var(--violet-400);
+  --color-carbs: var(--lime-400);
+  --color-fat: var(--coral-500);
 
   --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-unbounded), var(--font-geist), sans-serif;
+  --font-display: var(--font-bricolage), var(--font-geist), sans-serif;
 
   --radius-sm: var(--r-sm);
   --radius-md: var(--r-md);
@@ -113,10 +126,16 @@ h1,
 h2,
 h3 {
   font-family: var(--font-display);
-  font-weight: 700;
-  line-height: 1.1;
-  letter-spacing: -0.01em;
+  font-weight: 800;
+  font-optical-sizing: auto;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
   text-wrap: balance;
+}
+
+.font-display {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
 }
 
 .tabular,
@@ -126,12 +145,12 @@ input,
 }
 
 :focus-visible {
-  outline: 2px solid var(--ice-100);
+  outline: 2px solid var(--lime-400);
   outline-offset: 2px;
 }
 
 ::selection {
-  background: rgb(75 99 255 / 0.45);
+  background: rgb(125 57 235 / 0.55);
 }
 
 .skip-link {
@@ -141,13 +160,51 @@ input,
   z-index: 100;
   padding: 10px 16px;
   border-radius: var(--r-sm);
-  background: var(--ice-100);
+  background: var(--lime-400);
   color: var(--ink-950);
   font-weight: 600;
   transform: translateY(-200%);
 }
 .skip-link:focus-visible {
   transform: none;
+}
+
+/* ------------------------------------------------------------- marca */
+
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.wordmark__text {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.0625rem;
+  letter-spacing: -0.02em;
+  color: var(--ice-100);
+}
+.mark {
+  flex: none;
+  display: block;
+  border-radius: 25%;
+  box-shadow: 0 6px 18px -8px rgb(125 57 235 / 0.9);
+}
+/* Login: os traços desenham-se (o "R" primeiro, a perna em lima a seguir). */
+.mark--draw .mark__r,
+.mark--draw .mark__leg {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: mark-draw 900ms var(--ease-enter) 150ms forwards;
+}
+.mark--draw .mark__leg {
+  animation-duration: 420ms;
+  animation-delay: 900ms;
+}
+
+@keyframes mark-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
 }
 
 @layer components {
@@ -158,13 +215,13 @@ input,
     isolation: isolate;
     background: var(--glass-bg);
     border-radius: var(--r-lg);
-    backdrop-filter: blur(20px) saturate(1.2);
+    backdrop-filter: blur(18px) saturate(1.25);
     box-shadow:
-      inset 0 1px 0 rgb(220 230 255 / 0.06),
-      0 24px 60px -24px rgb(0 0 0 / 0.65);
+      inset 0 1px 0 rgb(243 240 255 / 0.06),
+      0 24px 60px -24px rgb(0 0 0 / 0.7);
   }
 
-  /* Borda de 1px em gradiente subtil */
+  /* Borda de 1px em gradiente: luz em cima à esquerda, violeta em baixo à direita */
   .glass::after {
     content: "";
     position: absolute;
@@ -174,10 +231,10 @@ input,
     border-radius: inherit;
     background: linear-gradient(
       160deg,
-      rgb(220 230 255 / 0.24),
-      rgb(220 230 255 / 0.05) 38%,
-      rgb(220 230 255 / 0.04) 62%,
-      rgb(75 99 255 / 0.28)
+      rgb(243 240 255 / 0.22),
+      rgb(243 240 255 / 0.05) 38%,
+      rgb(155 107 255 / 0.06) 62%,
+      rgb(155 107 255 / 0.4)
     );
     -webkit-mask:
       linear-gradient(#000 0 0) content-box,
@@ -196,7 +253,7 @@ input,
     border-radius: inherit;
     background: radial-gradient(
       420px circle at var(--mx, 50%) var(--my, 50%),
-      rgb(75 99 255 / 0.14),
+      rgb(155 107 255 / 0.16),
       transparent 60%
     );
     opacity: 0;
@@ -213,7 +270,14 @@ input,
     background: var(--glass-bg-strong);
   }
 
-  /* Cartão com link: sobe 2px e a borda clareia */
+  /* Cartão-herói (os dois números principais do Painel): uma luz violeta no canto */
+  .glass--hero {
+    background:
+      radial-gradient(120% 90% at 0% 0%, rgb(125 57 235 / 0.34), transparent 58%),
+      var(--glass-bg);
+  }
+
+  /* Cartão com link: sobe 2px */
   .card-link {
     display: block;
     transition: transform 180ms var(--ease);
@@ -228,8 +292,9 @@ input,
 
   .btn {
     --btn-bg: transparent;
-    --btn-bg-hover: rgb(220 230 255 / 0.08);
+    --btn-bg-hover: rgb(243 240 255 / 0.08);
     --btn-fg: var(--ice-100);
+    position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -246,8 +311,9 @@ input,
     cursor: pointer;
     user-select: none;
     transition:
-      background-color var(--m-out) var(--ease),
+      background var(--m-out) var(--ease),
       border-color var(--m-out) var(--ease),
+      box-shadow var(--m-out) var(--ease),
       transform var(--m-out) var(--ease);
   }
   .btn svg {
@@ -263,7 +329,7 @@ input,
     }
   }
   .btn:active:not(:disabled) {
-    transform: translateY(1px) scale(0.985);
+    transform: translateY(1px) scale(0.97);
     transition-duration: var(--m-press);
   }
   .btn:disabled {
@@ -275,37 +341,55 @@ input,
   }
 
   .btn--primary {
-    --btn-bg: var(--cobalt-600);
-    --btn-bg-hover: #3a49ff;
+    --btn-bg: linear-gradient(180deg, #8f52f7 0%, var(--violet-500) 55%, var(--violet-600) 100%);
+    --btn-bg-hover: linear-gradient(180deg, #9d66ff 0%, #8a48f5 55%, var(--violet-500) 100%);
     --btn-fg: #fff;
     box-shadow:
-      inset 0 1px 0 rgb(255 255 255 / 0.18),
-      0 8px 24px -10px rgb(27 44 255 / 0.8);
+      inset 0 1px 0 rgb(255 255 255 / 0.22),
+      0 10px 28px -10px rgb(125 57 235 / 0.9);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .btn--primary:hover:not(:disabled) {
+      box-shadow:
+        inset 0 1px 0 rgb(255 255 255 / 0.25),
+        0 14px 36px -10px rgb(125 57 235 / 1);
+    }
   }
   .btn--secondary {
-    --btn-bg: rgb(220 230 255 / 0.04);
-    --btn-bg-hover: rgb(220 230 255 / 0.1);
+    --btn-bg: rgb(243 240 255 / 0.05);
+    --btn-bg-hover: rgb(243 240 255 / 0.11);
     border: 1px solid var(--line-strong);
   }
   .btn--ghost {
-    --btn-bg-hover: rgb(220 230 255 / 0.08);
+    --btn-bg-hover: rgb(243 240 255 / 0.08);
     padding: 0 12px;
   }
   .btn--danger {
-    --btn-bg: var(--vermillion-500);
-    --btn-bg-hover: #ff6a50;
+    --btn-bg: var(--coral-500);
+    --btn-bg-hover: #ff7a88;
     --btn-fg: var(--ink-950);
   }
-  .btn--acid {
-    --btn-bg: var(--acid-400);
-    --btn-bg-hover: #e2ff6e;
+  /* A ação principal da página: lima, texto preto, brilho lima */
+  .btn--lime {
+    --btn-bg: var(--lime-400);
+    --btn-bg-hover: var(--lime-300);
     --btn-fg: var(--ink-950);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.35),
+      0 10px 28px -10px rgb(198 255 51 / 0.7);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .btn--lime:hover:not(:disabled) {
+      box-shadow:
+        inset 0 1px 0 rgb(255 255 255 / 0.4),
+        0 14px 36px -10px rgb(198 255 51 / 0.85);
+    }
   }
   .btn--lg {
-    min-height: 52px;
+    min-height: 54px;
     padding: 0 24px;
-    font-size: 1rem;
-    border-radius: var(--r-md);
+    font-size: 1.0625rem;
+    border-radius: 16px;
   }
   .btn--sm {
     min-height: 36px;
@@ -339,7 +423,7 @@ input,
   }
   .field__error {
     font-size: 0.8125rem;
-    color: var(--vermillion-300);
+    color: var(--coral-300);
   }
 
   .input {
@@ -347,7 +431,7 @@ input,
     height: 48px;
     padding: 0 14px;
     border-radius: var(--r-md);
-    border: 1px solid rgb(220 230 255 / 0.16);
+    border: 1px solid rgb(243 240 255 / 0.16);
     background: var(--field-bg);
     color: var(--ice-100);
     font-size: 1rem;
@@ -356,15 +440,15 @@ input,
       box-shadow 140ms var(--ease);
   }
   .input::placeholder {
-    color: rgb(179 195 238 / 0.5);
+    color: rgb(184 176 212 / 0.5);
   }
   .input:focus-visible {
     outline: none;
-    border-color: var(--cobalt-400);
-    box-shadow: 0 0 0 3px rgb(75 99 255 / 0.35);
+    border-color: var(--violet-400);
+    box-shadow: 0 0 0 3px rgb(155 107 255 / 0.32);
   }
   .input[aria-invalid="true"] {
-    border-color: rgb(255 74 43 / 0.75);
+    border-color: rgb(255 92 108 / 0.75);
   }
   textarea.input {
     height: auto;
@@ -378,9 +462,10 @@ input,
     height: 64px;
     padding: 0 16px;
     font-family: var(--font-display);
-    font-size: 1.75rem;
-    font-weight: 500;
-    letter-spacing: -0.01em;
+    font-optical-sizing: auto;
+    font-size: 1.875rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
   }
 
   .input-affix {
@@ -410,7 +495,7 @@ input,
   .check input {
     width: 18px;
     height: 18px;
-    accent-color: var(--cobalt-600);
+    accent-color: var(--violet-500);
   }
 
   /* --------------------------------------------------------- skeleton */
@@ -419,7 +504,7 @@ input,
     position: relative;
     overflow: hidden;
     border-radius: var(--r-sm);
-    background: rgb(220 230 255 / 0.06);
+    background: rgb(243 240 255 / 0.06);
   }
   .skeleton::after {
     content: "";
@@ -428,7 +513,7 @@ input,
     background: linear-gradient(
       90deg,
       transparent,
-      rgb(220 230 255 / 0.08),
+      rgb(243 240 255 / 0.08),
       transparent
     );
     transform: translateX(-100%);
@@ -437,12 +522,47 @@ input,
 
   /* ----------------------------------------------------------- etiquetas */
 
+  /* Título pequeno de um cartão ou secção: frase normal, sem maiúsculas espaçadas. */
   .eyebrow {
-    font-size: 0.75rem;
+    font-size: 0.8125rem;
     font-weight: 600;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+    letter-spacing: 0;
+    text-transform: none;
     color: var(--ice-300);
+  }
+  .eyebrow::first-letter {
+    text-transform: uppercase;
+  }
+
+  /* Título de página: revela-se da esquerda para a direita, uma vez. */
+  .page-title {
+    animation: title-wipe 720ms var(--ease-enter) both;
+  }
+
+  /* ------------------------------------------------------------ sequência */
+
+  .streak {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--ice-300);
+    background: rgb(243 240 255 / 0.07);
+    white-space: nowrap;
+  }
+  .streak svg {
+    width: 14px;
+    height: 14px;
+  }
+  .streak--hot {
+    color: var(--lime-400);
+    background: rgb(198 255 51 / 0.12);
+  }
+  .streak--hot svg {
+    animation: flame 1.6s ease-in-out infinite alternate;
   }
 
   /* ------------------------------------------------------------ diálogo */
@@ -457,12 +577,12 @@ input,
     padding: 0;
     color: var(--ice-100);
     border-radius: var(--r-xl) var(--r-xl) 0 0;
-    background: rgb(10 13 31 / 0.96);
+    background: rgb(14 11 23 / 0.97);
     overflow: auto;
     overscroll-behavior: contain;
   }
   .dialog::backdrop {
-    background: rgb(5 6 13 / 0.6);
+    background: rgb(7 6 11 / 0.6);
     backdrop-filter: blur(6px);
   }
   .dialog[open] {
@@ -522,20 +642,20 @@ input,
     width: 14px;
     height: 14px;
   }
-  .type-badge[data-tone="cobalt"] {
-    background: rgb(27 44 255 / 0.3);
-    color: var(--cobalt-300);
+  .type-badge[data-tone="violet"] {
+    background: rgb(125 57 235 / 0.32);
+    color: var(--violet-300);
   }
-  .type-badge[data-tone="acid"] {
-    background: rgb(215 255 58 / 0.14);
-    color: var(--acid-400);
+  .type-badge[data-tone="lime"] {
+    background: rgb(198 255 51 / 0.14);
+    color: var(--lime-400);
   }
   .type-badge[data-tone="ice"] {
-    background: rgb(220 230 255 / 0.1);
+    background: rgb(243 240 255 / 0.1);
     color: var(--ice-100);
   }
   .type-badge[data-tone="muted"] {
-    background: rgb(220 230 255 / 0.06);
+    background: rgb(243 240 255 / 0.06);
     color: var(--ice-300);
   }
 
@@ -546,6 +666,7 @@ input,
     align-items: center;
     gap: 4px;
     font-size: 0.8125rem;
+    font-weight: 600;
     font-variant-numeric: tabular-nums;
   }
   .delta svg {
@@ -553,10 +674,10 @@ input,
     height: 14px;
     flex: none;
   }
-  .delta--good { color: var(--success); }
-  .delta--bad { color: var(--vermillion-300); }
+  .delta--good { color: var(--lime-400); }
+  .delta--bad { color: var(--coral-300); }
   .delta--same,
-  .delta--neutral { color: var(--ice-300); }
+  .delta--neutral { color: var(--ice-300); font-weight: 500; }
 
   /* ------------------------------------------------- escolha segmentada */
 
@@ -566,7 +687,7 @@ input,
     padding: 4px;
     border-radius: var(--r-md);
     background: var(--field-bg);
-    border: 1px solid rgb(220 230 255 / 0.16);
+    border: 1px solid rgb(243 240 255 / 0.14);
   }
   .segmented label {
     position: relative;
@@ -589,26 +710,26 @@ input,
     transition: background-color var(--m-out) var(--ease), color var(--m-out) var(--ease);
   }
   .segmented input:checked + span {
-    background: rgb(27 44 255 / 0.4);
+    background: rgb(125 57 235 / 0.4);
     color: var(--ice-100);
-    box-shadow: inset 0 0 0 1px rgb(75 99 255 / 0.6);
+    box-shadow: inset 0 0 0 1px rgb(155 107 255 / 0.6);
   }
   .segmented input:focus-visible + span {
-    outline: 2px solid var(--ice-100);
+    outline: 2px solid var(--lime-400);
     outline-offset: 2px;
   }
 
   /* ------------------------------------------------ entrada escalonada */
   /* Uma vez, ao abrir a página. Nunca ao fazer scroll. */
   .stagger > * {
-    animation: enter-up 520ms var(--ease-enter) both;
+    animation: enter-up 560ms var(--ease-enter) both;
   }
-  .stagger > :nth-child(2) { animation-delay: 60ms; }
-  .stagger > :nth-child(3) { animation-delay: 120ms; }
-  .stagger > :nth-child(4) { animation-delay: 180ms; }
-  .stagger > :nth-child(5) { animation-delay: 240ms; }
-  .stagger > :nth-child(6) { animation-delay: 300ms; }
-  .stagger > :nth-child(n + 7) { animation-delay: 360ms; }
+  .stagger > :nth-child(2) { animation-delay: 70ms; }
+  .stagger > :nth-child(3) { animation-delay: 140ms; }
+  .stagger > :nth-child(4) { animation-delay: 210ms; }
+  .stagger > :nth-child(5) { animation-delay: 280ms; }
+  .stagger > :nth-child(6) { animation-delay: 350ms; }
+  .stagger > :nth-child(n + 7) { animation-delay: 420ms; }
 }
 
 @keyframes shimmer {
@@ -640,7 +761,37 @@ input,
 @keyframes enter-up {
   from {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(14px);
+  }
+}
+
+@keyframes title-wipe {
+  from {
+    clip-path: inset(0 100% 0 0);
+    transform: translateX(-6px);
+  }
+  to {
+    clip-path: inset(0 -4% 0 0);
+    transform: none;
+  }
+}
+
+@keyframes flame {
+  from {
+    transform: scale(0.92) rotate(-5deg);
+  }
+  to {
+    transform: scale(1.1) rotate(5deg);
+  }
+}
+
+/* Pulso em lima (um cartão ou campo acabou de mudar) */
+@keyframes lime-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgb(198 255 51 / 0.55);
+  }
+  100% {
+    box-shadow: 0 0 0 14px rgb(198 255 51 / 0);
   }
 }
 
@@ -655,6 +806,11 @@ input,
   }
   .skeleton::after {
     display: none;
+  }
+  .mark--draw .mark__r,
+  .mark--draw .mark__leg {
+    stroke-dashoffset: 0;
+    animation: none;
   }
 }
 
@@ -695,8 +851,8 @@ input,
   height: 40px;
   border-radius: 50%;
   pointer-events: none;
-  background: radial-gradient(circle, #dce6ff 0%, #8193ff 30%, #4b63ff 55%, #1b2cff 80%);
-  box-shadow: 0 0 60px 20px rgb(75 99 255 / 0.6);
+  background: radial-gradient(circle, #f3f0ff 0%, #b99cff 28%, #7d39eb 58%, #3b1a7d 85%);
+  box-shadow: 0 0 60px 20px rgb(125 57 235 / 0.6);
   transform: translate(-50%, -50%) scale(0.2);
 }
 
@@ -705,7 +861,7 @@ input,
   inset: 0;
   z-index: 200;
   pointer-events: none;
-  background: radial-gradient(circle at 50% 50%, #dce6ff 0%, #8193ff 25%, #4b63ff 50%, #1b2cff 85%);
+  background: radial-gradient(circle at 50% 50%, #f3f0ff 0%, #b99cff 22%, #7d39eb 50%, #3b1a7d 85%);
   -webkit-mask-image: radial-gradient(circle at 50% 50%, transparent var(--hole), #000 calc(var(--hole) + 14%));
   mask-image: radial-gradient(circle at 50% 50%, transparent var(--hole), #000 calc(var(--hole) + 14%));
 }
@@ -826,15 +982,15 @@ input,
   height: 52px;
   padding: 0 14px 0 42px;
   border-radius: var(--r-md);
-  border: 1px solid rgb(220 230 255 / 0.16);
+  border: 1px solid rgb(243 240 255 / 0.16);
   background: var(--field-bg);
   color: var(--ice-100);
   font-size: 1rem;
 }
 .palette__input:focus-visible {
   outline: none;
-  border-color: var(--cobalt-400);
-  box-shadow: 0 0 0 3px rgb(75 99 255 / 0.35);
+  border-color: var(--violet-400);
+  box-shadow: 0 0 0 3px rgb(155 107 255 / 0.32);
 }
 .palette__list {
   display: grid;
@@ -846,8 +1002,6 @@ input,
   padding: 10px 10px 4px;
   font-size: 0.75rem;
   font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
   color: var(--ice-300);
 }
 .palette__option {
@@ -865,8 +1019,8 @@ input,
   color: var(--ice-300);
 }
 .palette__option.is-active {
-  background: rgb(27 44 255 / 0.3);
-  box-shadow: inset 0 0 0 1px rgb(75 99 255 / 0.5);
+  background: rgb(125 57 235 / 0.32);
+  box-shadow: inset 0 0 0 1px rgb(155 107 255 / 0.5);
 }
 .palette__option.is-active svg {
   color: var(--ice-100);

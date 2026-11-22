@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Wordmark } from "@/components/brand/mark";
 import { AccountMenu } from "@/components/layout/account-menu";
 import { AppBackground } from "@/components/layout/app-background";
 import { CommandPalette, CommandPaletteTrigger } from "@/components/layout/command-palette";
@@ -23,7 +24,7 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
 
       <header className="app-header">
         <Link href="/" className="app-header__mark" aria-label="RECOMP, ir para o Painel">
-          RECOMP
+          <Wordmark />
         </Link>
         <div className="app-header__actions">
           <CommandPaletteTrigger />

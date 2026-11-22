@@ -30,8 +30,8 @@ export function MeasureChart({
           <AreaChart responsive style={{ width: "100%", height: "100%" }} data={points} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
             <defs>
               <linearGradient id={`m-${id}`} x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%" stopColor={CHART.cobalt} stopOpacity={0.22} />
-                <stop offset="100%" stopColor={CHART.cobalt} stopOpacity={0} />
+                <stop offset="0%" stopColor={CHART.violet} stopOpacity={0.22} />
+                <stop offset="100%" stopColor={CHART.violet} stopOpacity={0} />
               </linearGradient>
             </defs>
             <CartesianGrid stroke={CHART.grid} vertical={false} />
@@ -56,14 +56,14 @@ export function MeasureChart({
               tickFormatter={(v: number) => formatDecimal(v)}
             />
             <Tooltip
-              cursor={{ stroke: "rgba(220,230,255,0.35)", strokeWidth: 1 }}
+              cursor={{ stroke: "rgba(243,240,255,0.35)", strokeWidth: 1 }}
               content={(p) => {
                 const { active, label: t, payload } = p as unknown as TP;
                 if (!active || !payload?.length || t === undefined) return null;
                 return (
                   <ChartTooltipBox
                     time={t}
-                    rows={[{ key: id, label, color: CHART.cobalt, value: `${formatDecimal(payload[0].payload.value)} ${unit}` }]}
+                    rows={[{ key: id, label, color: CHART.violet, value: `${formatDecimal(payload[0].payload.value)} ${unit}` }]}
                   />
                 );
               }}
@@ -71,11 +71,11 @@ export function MeasureChart({
             <Area
               type="linear"
               dataKey="value"
-              stroke={CHART.cobalt}
+              stroke={CHART.violet}
               strokeWidth={2}
               fill={`url(#m-${id})`}
-              dot={points.length <= 10 ? { r: 3, fill: CHART.cobalt, stroke: CHART.surface, strokeWidth: 2 } : false}
-              activeDot={{ r: 5, stroke: CHART.surface, strokeWidth: 2, fill: CHART.cobalt }}
+              dot={points.length <= 10 ? { r: 3, fill: CHART.violet, stroke: CHART.surface, strokeWidth: 2 } : false}
+              activeDot={{ r: 5, stroke: CHART.surface, strokeWidth: 2, fill: CHART.violet }}
               isAnimationActive={false}
             />
           </AreaChart>

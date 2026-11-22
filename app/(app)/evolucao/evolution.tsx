@@ -146,7 +146,7 @@ export function Evolution({ data }: { data: EvolutionData }) {
           </div>
           <Legend
             items={[
-              { label: "Cintura (média 7 dias)", color: CHART.cobalt },
+              { label: "Cintura (média 7 dias)", color: CHART.violet },
               { label: "Braço (média D/E)", color: CHART.lime },
             ]}
           />
@@ -201,7 +201,7 @@ export function Evolution({ data }: { data: EvolutionData }) {
             </div>
             <Legend
               items={[
-                { label: "Média 7 dias", color: CHART.cobalt },
+                { label: "Média 7 dias", color: CHART.violet },
                 { label: "Medição", color: CHART.dot, shape: "dot" },
               ]}
             />
@@ -229,7 +229,7 @@ export function Evolution({ data }: { data: EvolutionData }) {
             </div>
             <Legend
               items={[
-                { label: "Média 7 dias", color: CHART.cobalt },
+                { label: "Média 7 dias", color: CHART.violet },
                 { label: "Pesagem", color: CHART.dot, shape: "dot" },
               ]}
             />

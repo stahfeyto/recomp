@@ -38,7 +38,7 @@ export function KpiCard({
   children?: ReactNode;
 }) {
   return (
-    <Card className={cn("kpi", size === "lg" && "kpi--lg", className)}>
+    <Card className={cn("kpi", size === "lg" && "kpi--lg glass--hero", className)}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="eyebrow">{label}</p>
         {badge && (

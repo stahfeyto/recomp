@@ -334,3 +334,19 @@ export function movingAverage(points: ReadonlyArray<Point>): Array<Point & { cou
 export function ratio(a: number, b: number): number {
   return Math.round((a / b) * 100) / 100;
 }
+
+/**
+ * Dias seguidos com registo (pesagem ou medição), a acabar hoje ou ontem.
+ * Se hoje ainda não há registo, a sequência de ontem continua "viva" (0 se também
+ * não houve ontem). Só para mostrar; não entra em nenhum cálculo.
+ */
+export function streakDays(dates: Iterable<string>, today: string): number {
+  const set = new Set(dates);
+  let day = set.has(today) ? today : shiftISODate(today, -1);
+  let n = 0;
+  while (set.has(day)) {
+    n += 1;
+    day = shiftISODate(day, -1);
+  }
+  return n;
+}

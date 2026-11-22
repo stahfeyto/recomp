@@ -7,7 +7,8 @@ import { NAV_ITEMS, isActive } from "./nav-items";
 
 /**
  * Navegação principal: dock flutuante em vidro, em baixo no telemóvel,
- * barra lateral no desktop (≥ 1024px). O indicador desliza entre itens.
+ * barra lateral no desktop (≥ 1024px). O indicador desliza entre itens
+ * (mola) e cada item encolhe ao toque.
  */
 export function Dock() {
   const pathname = usePathname();
@@ -36,8 +37,14 @@ export function Dock() {
                     aria-hidden="true"
                   />
                 )}
-                <Icon className="dock__icon" aria-hidden="true" />
-                <span className="dock__label">{label}</span>
+                <motion.span
+                  className="dock__inner"
+                  whileTap={{ scale: 0.88 }}
+                  transition={{ type: "spring", stiffness: 700, damping: 32 }}
+                >
+                  <Icon className="dock__icon" aria-hidden="true" />
+                  <span className="dock__label">{label}</span>
+                </motion.span>
               </Link>
             </li>
           );

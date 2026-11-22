@@ -2,9 +2,9 @@ import type { CSSProperties } from "react";
 import { macroShares, type Macros } from "@/lib/macros";
 
 const SEGMENTS = [
-  { key: "proteinG", label: "Proteína", color: "var(--cobalt-400)" },
-  { key: "carbsG", label: "Hidratos", color: "var(--acid-400)" },
-  { key: "fatG", label: "Gordura", color: "var(--vermillion-500)" },
+  { key: "proteinG", label: "Proteína", color: "var(--violet-400)" },
+  { key: "carbsG", label: "Hidratos", color: "var(--lime-400)" },
+  { key: "fatG", label: "Gordura", color: "var(--coral-500)" },
 ] as const;
 
 const R = 52;

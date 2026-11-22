@@ -8,7 +8,7 @@
   padding: 4px;
   border-radius: var(--r-md);
   background: var(--field-bg);
-  border: 1px solid rgb(220 230 255 / 0.16);
+  border: 1px solid rgb(243 240 255 / 0.16);
   justify-self: start;
 }
 
@@ -26,14 +26,14 @@
 @media (hover: hover) and (pointer: fine) {
   .evo-filters__btn:hover {
     color: var(--ice-100);
-    background: rgb(220 230 255 / 0.06);
+    background: rgb(243 240 255 / 0.06);
   }
 }
 
 .evo-filters__btn[aria-pressed="true"] {
-  background: rgb(27 44 255 / 0.4);
+  background: rgb(125 57 235 / 0.4);
   color: var(--ice-100);
-  box-shadow: inset 0 0 0 1px rgb(75 99 255 / 0.6);
+  box-shadow: inset 0 0 0 1px rgb(155 107 255 / 0.6);
 }
 
 .evo-card {
@@ -131,7 +131,7 @@
 .chart-frame__placeholder {
   height: 100%;
   border-radius: var(--r-sm);
-  background: rgb(220 230 255 / 0.03);
+  background: rgb(243 240 255 / 0.03);
 }
 
 .chart-frame .recharts-surface:focus,
@@ -149,7 +149,7 @@
   min-width: 160px;
   padding: 10px 12px;
   border-radius: var(--r-sm);
-  background: rgb(10 13 31 / 0.96);
+  background: rgb(14 11 23 / 0.96);
   border: 1px solid var(--line-strong);
   box-shadow: 0 12px 32px -12px rgb(0 0 0 / 0.7);
   font-size: 0.8125rem;
@@ -196,7 +196,7 @@
 }
 
 .chart-tooltip__detail {
-  color: rgb(159 179 232 / 0.8);
+  color: rgb(184 176 212 / 0.8);
 }
 
 /* ------------------------------------------------------- tabelas */
@@ -210,7 +210,7 @@
   align-items: center;
   min-height: 44px;
   font-size: 0.875rem;
-  color: var(--cobalt-300);
+  color: var(--violet-300);
   cursor: pointer;
 }
 

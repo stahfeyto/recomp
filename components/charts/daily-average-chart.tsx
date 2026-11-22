@@ -88,7 +88,7 @@ export function DailyAverageChart({
             />
           ))}
           <Tooltip
-            cursor={{ stroke: "rgba(220,230,255,0.35)", strokeWidth: 1 }}
+            cursor={{ stroke: "rgba(243,240,255,0.35)", strokeWidth: 1 }}
             content={(p) => {
               const { active, label: t, payload } = p as unknown as TP;
               if (!active || !payload?.length || t === undefined) return null;
@@ -100,7 +100,7 @@ export function DailyAverageChart({
                     {
                       key: "avg",
                       label: r.count >= 4 ? "Média de 7 dias" : r.count === 1 ? "Medição única" : `Média (${r.count} medições)`,
-                      color: CHART.cobalt,
+                      color: CHART.violet,
                       value: fmt(r.avg),
                     },
                     { key: "v", label: pointLabel, color: CHART.dot, value: fmt(r.value), key_shape: "dot" as const },
@@ -125,10 +125,10 @@ export function DailyAverageChart({
             type="monotone"
             dataKey="avg"
             name="Média de 7 dias"
-            stroke={CHART.cobalt}
+            stroke={CHART.violet}
             strokeWidth={2}
             dot={false}
-            activeDot={{ r: 5, stroke: CHART.surface, strokeWidth: 2, fill: CHART.cobalt }}
+            activeDot={{ r: 5, stroke: CHART.surface, strokeWidth: 2, fill: CHART.violet }}
             isAnimationActive={false}
             label={(props) => <EndLabel {...props} lastIndex={last} text={fmt} />}
           />

@@ -11,6 +11,7 @@ import {
   reliabilityOf,
   seriesOf,
   slowSummary,
+  streakDays,
   toneOf,
   trendOf,
   weekStart,
@@ -224,5 +225,21 @@ describe("cores e séries", () => {
   it("segunda-feira da semana", () => {
     expect(weekStart("2026-11-22")).toBe("2026-11-16"); // domingo → segunda anterior
     expect(weekStart("2026-11-16")).toBe("2026-11-16");
+  });
+});
+
+describe("dias seguidos", () => {
+  it("conta para trás a partir de hoje", () => {
+    expect(streakDays(["2026-11-20", "2026-11-21", "2026-11-22"], "2026-11-22")).toBe(3);
+  });
+
+  it("sem registo hoje, a sequência de ontem continua viva", () => {
+    expect(streakDays(["2026-11-20", "2026-11-21"], "2026-11-22")).toBe(2);
+  });
+
+  it("um buraco de um dia reinicia a contagem", () => {
+    expect(streakDays(["2026-11-18", "2026-11-19", "2026-11-21", "2026-11-22"], "2026-11-22")).toBe(2);
+    expect(streakDays(["2026-11-19"], "2026-11-22")).toBe(0);
+    expect(streakDays([], "2026-11-22")).toBe(0);
   });
 });

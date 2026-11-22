@@ -54,7 +54,7 @@ export function DailyWeightCard({
           <p className="eyebrow">Pesagem diária</p>
           <h2 className="text-lg">Média dos últimos 7 dias</h2>
         </div>
-        <Scale className="size-6 text-cobalt-300" aria-hidden="true" />
+        <Scale className="size-6 text-violet-300" aria-hidden="true" />
       </div>
 
       {weekly ? (

@@ -76,20 +76,22 @@
   align-items: baseline;
   gap: 8px;
   font-family: var(--font-display);
-  font-weight: 500;
-  font-size: clamp(2rem, 6vw, 2.5rem);
+  font-optical-sizing: auto;
+  font-weight: 800;
+  font-size: clamp(2.125rem, 6.5vw, 2.75rem);
   line-height: 1;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.04em;
 }
 
 .kpi--lg .kpi__value {
-  font-size: clamp(2.75rem, 9vw, 4rem);
+  font-size: clamp(3.25rem, 13vw, 5rem);
 }
 
 .kpi__unit {
-  font-size: 0.45em;
+  font-size: 0.42em;
+  font-weight: 600;
   color: var(--ice-300);
-  letter-spacing: 0;
+  letter-spacing: -0.01em;
 }
 
 .kpi__deltas {
@@ -131,21 +133,50 @@
 
 .sparkline__line {
   fill: none;
-  stroke: var(--cobalt-400);
+  stroke: var(--violet-400);
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
+/* O ponto de "hoje": lima, com um anel que pulsa devagar (a série está viva). */
 .sparkline__dot {
   position: absolute;
-  width: 8px;
-  height: 8px;
-  margin: -4px 0 0 -4px;
+  width: 9px;
+  height: 9px;
+  margin: -4.5px 0 0 -4.5px;
   border-radius: 50%;
-  background: var(--ice-100);
-  box-shadow: 0 0 0 3px rgb(75 99 255 / 0.45), 0 0 12px rgb(75 99 255 / 0.8);
-  animation: fade-in 300ms var(--ease) 1.2s both;
+  background: var(--lime-400);
+  box-shadow: 0 0 0 3px rgb(198 255 51 / 0.25), 0 0 16px rgb(198 255 51 / 0.9);
+  animation: dot-pop 420ms var(--ease-enter) 1.15s both;
+}
+
+.sparkline__dot::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 2px solid rgb(198 255 51 / 0.7);
+  animation: live-ring 2.6s ease-out 1.6s infinite;
+}
+
+@keyframes dot-pop {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+}
+
+@keyframes live-ring {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.9;
+  }
+  70%,
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
 }
 
 @keyframes spark-reveal {
@@ -240,16 +271,16 @@
   position: relative;
   height: 8px;
   border-radius: 8px;
-  background: rgb(220 230 255 / 0.1);
+  background: rgb(243 240 255 / 0.1);
 }
 
 .ratio-meter--zone .ratio-meter__track {
   background: linear-gradient(
     90deg,
-    rgb(61 245 166 / 0.35) 0,
-    rgb(61 245 166 / 0.35) var(--m),
-    rgb(255 74 43 / 0.3) var(--m),
-    rgb(255 74 43 / 0.3) 100%
+    rgb(198 255 51 / 0.35) 0,
+    rgb(198 255 51 / 0.35) var(--m),
+    rgb(255 92 108 / 0.3) var(--m),
+    rgb(255 92 108 / 0.3) 100%
   );
 }
 
@@ -258,7 +289,7 @@
   inset: 0 auto 0 0;
   width: var(--v);
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--cobalt-600), var(--cobalt-400));
+  background: linear-gradient(90deg, var(--violet-500), var(--violet-400));
   transform-origin: left;
   animation: meter-fill 1.2s var(--ease-enter) 200ms both;
 }
@@ -277,7 +308,7 @@
   width: 2px;
   margin-left: -1px;
   border-radius: 2px;
-  background: var(--acid-400);
+  background: var(--lime-400);
 }
 
 .ratio-meter__pointer {
@@ -305,7 +336,7 @@
   position: absolute;
   left: var(--m);
   translate: -50% 0;
-  color: var(--acid-400);
+  color: var(--lime-400);
   white-space: nowrap;
 }
 
@@ -323,7 +354,7 @@
   gap: 12px;
   padding: 10px 12px;
   border-radius: var(--r-sm);
-  background: rgb(220 230 255 / 0.04);
+  background: rgb(243 240 255 / 0.04);
 }
 
 .checklist li span {
@@ -332,11 +363,11 @@
 }
 
 .checklist li[data-due="true"] {
-  box-shadow: inset 2px 0 0 var(--acid-400);
+  box-shadow: inset 2px 0 0 var(--lime-400);
 }
 
 .checklist li[data-due="true"] span {
-  color: var(--acid-400);
+  color: var(--lime-400);
 }
 
 .routine {
@@ -358,7 +389,7 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  border: 2px solid var(--cobalt-400);
+  border: 2px solid var(--violet-400);
 }
 
 /* ------------------------------------------------------- treino */
@@ -384,8 +415,8 @@
   height: 26px;
   border-radius: 50%;
   font-size: 0.75rem;
-  background: rgb(75 99 255 / 0.18);
-  color: var(--cobalt-300);
+  background: rgb(155 107 255 / 0.18);
+  color: var(--violet-300);
   flex: none;
 }
 
@@ -404,12 +435,14 @@
   border-radius: 999px;
   font-size: 0.8125rem;
   font-weight: 600;
-  background: rgb(220 230 255 / 0.1);
+  background: rgb(125 57 235 / 0.3);
   color: var(--ice-100);
   white-space: nowrap;
 }
 
+/* "poucos dados" / "medição única": informação, não alarme */
 .kpi__badge[data-tone="warn"] {
-  background: rgb(215 255 58 / 0.14);
-  color: var(--acid-400);
+  background: transparent;
+  border: 1px dashed var(--line-strong);
+  color: var(--ice-300);
 }

@@ -17,9 +17,9 @@ export function MacroRings({ goal, weightKg }: { goal: Goal; weightKg: number | 
   };
   const total = kcal.protein + kcal.carbs + kcal.fat;
   const rings = [
-    { key: "protein", label: "Proteína", grams: goal.proteinG, share: kcal.protein / total, r: 52, color: "var(--cobalt-400)" },
-    { key: "carbs", label: "Hidratos", grams: goal.carbsG, share: kcal.carbs / total, r: 40, color: "var(--acid-400)" },
-    { key: "fat", label: "Gordura", grams: goal.fatG, share: kcal.fat / total, r: 28, color: "var(--vermillion-500)" },
+    { key: "protein", label: "Proteína", grams: goal.proteinG, share: kcal.protein / total, r: 52, color: "var(--violet-400)" },
+    { key: "carbs", label: "Hidratos", grams: goal.carbsG, share: kcal.carbs / total, r: 40, color: "var(--lime-400)" },
+    { key: "fat", label: "Gordura", grams: goal.fatG, share: kcal.fat / total, r: 28, color: "var(--coral-500)" },
   ];
   const pct = (n: number) => Math.round(n * 100);
 

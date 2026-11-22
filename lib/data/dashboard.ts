@@ -13,6 +13,7 @@ import {
   slowSummary,
   weightSeries,
   type Point,
+  streakDays,
 } from "@/lib/metrics";
 import { requireSession } from "@/lib/session";
 
@@ -97,6 +98,14 @@ export async function getDashboardData() {
       ...dueMeasures(measurements, today),
       weightToday: dailyWeights.some((w) => w.date === today),
     },
+    // Dias seguidos com registo (só para mostrar; não entra em cálculos).
+    streak: streakDays(
+      [
+        ...measurements.filter((m) => m.waistCm != null || m.weightKg != null).map((m) => m.date),
+        ...dailyWeights.map((w) => w.date),
+      ],
+      today,
+    ),
     training: day
       ? {
           title: day.title,

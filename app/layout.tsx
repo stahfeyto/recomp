@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Unbounded } from "next/font/google";
+import { Bricolage_Grotesque, Geist } from "next/font/google";
 import "./globals.css";
 
 const geist = Geist({
@@ -7,10 +7,12 @@ const geist = Geist({
   subsets: ["latin"],
 });
 
-const unbounded = Unbounded({
-  variable: "--font-unbounded",
+// Fonte de exibição: títulos, números grandes e wordmark. Variável (peso, largura,
+// tamanho ótico): pesada e apertada nos números, mais aberta no texto pequeno.
+const bricolage = Bricolage_Grotesque({
+  variable: "--font-bricolage",
   subsets: ["latin"],
-  weight: ["500", "700"],
+  axes: ["opsz", "wdth"],
 });
 
 export const metadata: Metadata = {
@@ -28,7 +30,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#05060D",
+  themeColor: "#07060B",
   colorScheme: "dark",
 };
 
@@ -36,7 +38,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="pt-PT"
-      className={`${geist.variable} ${unbounded.variable} h-full antialiased`}
+      className={`${geist.variable} ${bricolage.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>

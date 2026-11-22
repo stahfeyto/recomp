@@ -12,7 +12,7 @@ export function ApplyButton() {
   const { toast } = useToast();
   return (
     <Button
-      variant="acid"
+      variant="lime"
       size="lg"
       loading={pending}
       onClick={() =>

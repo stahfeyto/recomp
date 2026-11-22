@@ -43,7 +43,7 @@ export function AssistantCard({
     <Card className="assistant" data-tone={TONE[rec.kind]} spotlight={false}>
       <div className="flex items-center justify-between gap-3">
         <p className="eyebrow">Assistente de check-in</p>
-        <Sparkles className="size-5 text-acid-400" aria-hidden="true" />
+        <Sparkles className="size-5 text-lime-400" aria-hidden="true" />
       </div>
 
       <div className="grid gap-2">

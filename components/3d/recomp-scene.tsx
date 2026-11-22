@@ -47,7 +47,7 @@ function ChromeKnot({ scale }: { scale: number }) {
       <mesh ref={mesh}>
         <torusKnotGeometry args={[1, 0.3, 220, 36]} />
         <meshPhysicalMaterial
-          color="#dfe6ff"
+          color="#efe9ff"
           metalness={1}
           roughness={0.14}
           clearcoat={1}
@@ -68,7 +68,7 @@ function LightRing() {
   return (
     <mesh ref={ref} rotation={[1.2, 0.2, 0]}>
       <torusGeometry args={[2.7, 0.012, 16, 240]} />
-      <meshBasicMaterial color="#4B63FF" toneMapped={false} />
+      <meshBasicMaterial color="#9B6BFF" toneMapped={false} />
     </mesh>
   );
 }
@@ -104,7 +104,7 @@ function Particles({ count }: { count: number }) {
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" args={[positions, 3]} />
       </bufferGeometry>
-      <pointsMaterial size={0.025} color="#9FB3E8" transparent opacity={0.75} sizeAttenuation depthWrite={false} />
+      <pointsMaterial size={0.025} color="#B8B0D4" transparent opacity={0.75} sizeAttenuation depthWrite={false} />
     </points>
   );
 }
@@ -146,10 +146,12 @@ export default function RecompScene({ variant }: { variant: SceneVariant }) {
         frameloop={active ? "always" : "never"}
       >
         <Environment resolution={256} frames={1}>
-          <Lightformer form="ring" intensity={4} color="#4B63FF" scale={6} position={[0, 0, -6]} />
-          <Lightformer form="rect" intensity={5} color="#DCE6FF" scale={[12, 2, 1]} position={[0, 5, -1]} rotation-x={Math.PI / 2} />
-          <Lightformer form="rect" intensity={2.5} color="#1B2CFF" scale={[10, 10, 1]} position={[-6, 0, 0]} rotation-y={Math.PI / 2} />
-          <Lightformer form="rect" intensity={1.5} color="#9FB3E8" scale={[10, 10, 1]} position={[6, -1, 1]} rotation-y={-Math.PI / 2} />
+          <Lightformer form="ring" intensity={4} color="#9B6BFF" scale={6} position={[0, 0, -6]} />
+          <Lightformer form="rect" intensity={5} color="#F3F0FF" scale={[12, 2, 1]} position={[0, 5, -1]} rotation-x={Math.PI / 2} />
+          <Lightformer form="rect" intensity={2.5} color="#7D39EB" scale={[10, 10, 1]} position={[-6, 0, 0]} rotation-y={Math.PI / 2} />
+          <Lightformer form="rect" intensity={1.5} color="#B8B0D4" scale={[10, 10, 1]} position={[6, -1, 1]} rotation-y={-Math.PI / 2} />
+          {/* Reflexo em lima por baixo, à direita: o cromado ganha a cor da marca. */}
+          <Lightformer form="rect" intensity={2.2} color="#C6FF33" scale={[6, 1.2, 1]} position={[3, -4, 2]} rotation-x={-Math.PI / 3} />
         </Environment>
         {/* Login: o topo do nó fica atrás do cartão (o wordmark e o subtítulo leem-se). */}
         <group position={login ? [0, -0.85, 0] : [0, 0, 0]}>

@@ -24,9 +24,9 @@ export function Celebration() {
                 "--y": `${Math.round(Math.sin(angle) * dist * 0.6)}px`,
                 "--c":
                   i % 3 === 0
-                    ? "var(--acid-400)"
+                    ? "var(--lime-400)"
                     : i % 3 === 1
-                      ? "var(--cobalt-400)"
+                      ? "var(--violet-400)"
                       : "var(--ice-100)",
                 animationDelay: `${(i % 4) * 30}ms`,
               } as CSSProperties

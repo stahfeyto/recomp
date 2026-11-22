@@ -33,13 +33,13 @@ export function GoalsTimeline({
               <p className="timeline__values num">
                 <strong>{g.calories} kcal</strong>
                 <span>
-                  <span className="timeline__swatch" style={{ background: "var(--cobalt-400)" }} aria-hidden="true" />P {g.proteinG} g
+                  <span className="timeline__swatch" style={{ background: "var(--violet-400)" }} aria-hidden="true" />P {g.proteinG} g
                 </span>
                 <span>
-                  <span className="timeline__swatch" style={{ background: "var(--acid-400)" }} aria-hidden="true" />H {g.carbsG} g
+                  <span className="timeline__swatch" style={{ background: "var(--lime-400)" }} aria-hidden="true" />H {g.carbsG} g
                 </span>
                 <span>
-                  <span className="timeline__swatch" style={{ background: "var(--vermillion-500)" }} aria-hidden="true" />G {g.fatG} g
+                  <span className="timeline__swatch" style={{ background: "var(--coral-500)" }} aria-hidden="true" />G {g.fatG} g
                 </span>
               </p>
               {g.notes && <p className="text-sm text-ice-300">{g.notes}</p>}

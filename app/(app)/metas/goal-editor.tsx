@@ -12,9 +12,9 @@ import { saveGoal, type SaveGoalState } from "./actions";
 import { MacroDonut } from "./donut";
 
 const MACROS: { key: MacroKey; label: string; color: string; min: number; max: number; step: number }[] = [
-  { key: "proteinG", label: "Proteína", color: "var(--cobalt-400)", min: 60, max: 300, step: 5 },
-  { key: "carbsG", label: "Hidratos", color: "var(--acid-400)", min: 0, max: 500, step: 5 },
-  { key: "fatG", label: "Gordura", color: "var(--vermillion-500)", min: 20, max: 150, step: 1 },
+  { key: "proteinG", label: "Proteína", color: "var(--violet-400)", min: 60, max: 300, step: 5 },
+  { key: "carbsG", label: "Hidratos", color: "var(--lime-400)", min: 0, max: 500, step: 5 },
+  { key: "fatG", label: "Gordura", color: "var(--coral-500)", min: 20, max: 150, step: 1 },
 ];
 
 const initial: SaveGoalState = { status: "idle", nonce: 0 };

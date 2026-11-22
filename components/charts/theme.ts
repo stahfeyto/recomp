@@ -1,20 +1,20 @@
 import { formatDayMonth } from "@/lib/format";
 
 /**
- * Cores dos gráficos (validadas com o validador da skill dataviz, modo escuro,
- * superfície #0E1229): cobalto + limão escuro passam banda de luminosidade,
- * croma, separação para daltonismo (ΔE 34,9) e contraste. O acid #D7FF3A da
- * marca é claro demais para marcas de dados; fica para os destaques.
+ * Cores dos gráficos (modo escuro, superfície ameixa #141022).
+ * Violeta = série principal (média de 7 dias, medidas); lima = segunda série
+ * (braço, no gráfico cintura vs braço) e limiares. Separam-se bem em luminosidade,
+ * por isso continuam distintas para daltonismo.
  */
 export const CHART = {
-  cobalt: "#4B63FF",
-  lime: "#7C9E0C",
-  grid: "rgba(220, 230, 255, 0.08)",
-  axis: "#9FB3E8",
-  surface: "#0E1229",
-  annotation: "rgba(159, 179, 232, 0.45)",
-  threshold: "#D7FF3A",
-  dot: "rgba(159, 179, 232, 0.55)",
+  violet: "#9B6BFF",
+  lime: "#C6FF33",
+  grid: "rgba(243, 240, 255, 0.08)",
+  axis: "#B8B0D4",
+  surface: "#141022",
+  annotation: "rgba(184, 176, 212, 0.45)",
+  threshold: "#C6FF33",
+  dot: "rgba(184, 176, 212, 0.6)",
 } as const;
 
 export const axisTick = { fill: CHART.axis, fontSize: 12 } as const;

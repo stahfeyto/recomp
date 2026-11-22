@@ -15,7 +15,7 @@ export function PageHeader({
     <header className="flex flex-wrap items-end justify-between gap-4 pb-6 pt-2 sm:pb-8">
       <div className="grid gap-2">
         {eyebrow && <p className="eyebrow">{eyebrow}</p>}
-        <h1 className="text-[clamp(1.75rem,5vw,2.75rem)]">{title}</h1>
+        <h1 className="page-title text-[clamp(2rem,6vw,3rem)]">{title}</h1>
         {description && <p className="max-w-xl text-ice-300">{description}</p>}
       </div>
       {actions && <div className="flex flex-wrap gap-2">{actions}</div>}

@@ -5,6 +5,7 @@ import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StreakChip } from "@/components/ui/streak";
 import { getTodayData } from "@/lib/data/measurements";
 import { MeasurementForm } from "../medidas/measurement-form";
 import "../medidas/medidas.css";
@@ -31,6 +32,7 @@ async function RegistarContent() {
       <Card className="registar__card" spotlight={false}>
         <h2 className="registar__step">
           <span className="registar__step-n">1</span> Peso e cintura de hoje
+          <StreakChip days={data.streak} className="registar__step-hint" />
         </h2>
         <TodayForm data={data} />
       </Card>

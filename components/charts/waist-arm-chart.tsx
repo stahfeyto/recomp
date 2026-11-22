@@ -108,7 +108,7 @@ export function WaistArmChart({
               domain={[ticks[0], ticks[ticks.length - 1]]}
               ticks={ticks}
             />
-            <ReferenceLine y={0} stroke="rgba(220,230,255,0.22)" />
+            <ReferenceLine y={0} stroke="rgba(243,240,255,0.22)" />
             {goals.map((g) => (
               <ReferenceLine
                 key={g.t}
@@ -118,7 +118,7 @@ export function WaistArmChart({
               />
             ))}
             <Tooltip
-              cursor={{ stroke: "rgba(220,230,255,0.35)", strokeWidth: 1 }}
+              cursor={{ stroke: "rgba(243,240,255,0.35)", strokeWidth: 1 }}
               content={(p) => {
                 const { active, label, payload } = p as unknown as TP;
                 if (!active || !payload?.length || label === undefined) return null;
@@ -127,7 +127,7 @@ export function WaistArmChart({
                   <ChartTooltipBox
                     time={label}
                     rows={[
-                      seriesRow("w", "Cintura", CHART.cobalt, r.waistD, r.waist, r.waistLast, fmt),
+                      seriesRow("w", "Cintura", CHART.violet, r.waistD, r.waist, r.waistLast, fmt),
                       seriesRow("a", "Braço (média)", CHART.lime, r.armD, r.arm, r.armLast, fmt),
                     ]}
                   />
@@ -138,10 +138,10 @@ export function WaistArmChart({
               type="linear"
               dataKey="waistD"
               name="Cintura"
-              stroke={CHART.cobalt}
+              stroke={CHART.violet}
               strokeWidth={2}
               dot={false}
-              activeDot={{ r: 5, stroke: CHART.surface, strokeWidth: 2, fill: CHART.cobalt }}
+              activeDot={{ r: 5, stroke: CHART.surface, strokeWidth: 2, fill: CHART.violet }}
               connectNulls
               isAnimationActive={false}
               label={(props) => <EndLabel {...props} lastIndex={lastWaist} text={(v) => fmt(v)} />}

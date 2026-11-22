@@ -1,5 +1,5 @@
-/* Ecrã de login: palco, arco de luz e wordmark. Cartão, campos e botão vêm
-   do design system (globals.css). */
+/* Ecrã de login: palco, arco de luz, marca a desenhar-se e wordmark. Cartão,
+   campos e botão vêm do design system (globals.css). */
 
 .login-stage {
   position: relative;
@@ -11,7 +11,7 @@
   isolation: isolate;
 }
 
-/* Arco de luz azul que envolve o conteúdo (fallback estático da cena 3D da fase 9). */
+/* Arco de luz violeta, com um brilho lima no ponto mais alto (fallback estático da cena 3D). */
 .login-arc {
   position: absolute;
   z-index: -1;
@@ -26,11 +26,12 @@
     conic-gradient(
       from 200deg,
       transparent 0deg,
-      rgb(75 99 255 / 0.15) 40deg,
-      var(--cobalt-400) 110deg,
-      var(--ice-100) 160deg,
-      var(--cobalt-400) 210deg,
-      rgb(75 99 255 / 0.15) 280deg,
+      rgb(125 57 235 / 0.15) 40deg,
+      var(--violet-400) 110deg,
+      var(--ice-100) 150deg,
+      var(--lime-400) 172deg,
+      var(--violet-400) 215deg,
+      rgb(125 57 235 / 0.15) 280deg,
       transparent 320deg
     );
   filter: blur(18px);
@@ -42,7 +43,7 @@
   position: absolute;
   inset: 18%;
   border-radius: 50%;
-  background: radial-gradient(closest-side, rgb(27 44 255 / 0.22), transparent);
+  background: radial-gradient(closest-side, rgb(125 57 235 / 0.26), transparent);
   filter: blur(40px);
 }
 
@@ -56,36 +57,42 @@
 .login-content {
   display: grid;
   justify-items: center;
-  gap: 12px;
+  gap: 10px;
   width: min(400px, 100%);
+}
+
+/* Marca: entra de baixo e os traços desenham-se (ver .mark--draw em globals.css). */
+.login-mark {
+  margin-bottom: 6px;
+  box-shadow:
+    0 18px 50px -12px rgb(125 57 235 / 0.9),
+    0 0 0 1px rgb(243 240 255 / 0.08);
+  animation: enter-up 700ms var(--ease-enter) both;
 }
 
 .login-wordmark {
   font-family: var(--font-display);
-  font-weight: 700;
+  font-weight: 800;
   font-size: clamp(2.5rem, 9vw, 3.5rem);
-  letter-spacing: 0.22em;
-  margin-right: -0.22em; /* compensa o espaçamento da última letra */
+  letter-spacing: -0.04em;
   line-height: 1;
   /* legível por cima do cromado claro da cena 3D */
   text-shadow:
-    0 2px 24px rgb(5 6 13 / 0.85),
-    0 0 3px rgb(5 6 13 / 0.6);
+    0 2px 24px rgb(7 6 11 / 0.85),
+    0 0 3px rgb(7 6 11 / 0.6);
+  animation: enter-up 700ms var(--ease-enter) 120ms both;
 }
 
 /* Pequeno fundo em vidro: legível por cima de qualquer zona da cena 3D. */
 .login-lead {
+  margin-bottom: 20px;
   padding: 4px 12px;
   border-radius: 999px;
-  background: rgb(5 6 13 / 0.6);
+  background: rgb(7 6 11 / 0.6);
   backdrop-filter: blur(8px);
-  color: var(--ice-100);
-  font-size: 0.9375rem;
-}
-
-.login-lead {
   color: var(--ice-300);
-  margin-bottom: 20px;
+  font-size: 0.9375rem;
+  animation: enter-up 700ms var(--ease-enter) 220ms both;
 }
 
 .login-card {
@@ -93,7 +100,7 @@
   gap: 18px;
   width: min(400px, calc(100vw - 32px));
   padding: 28px 24px 24px;
-  animation: login-enter 700ms var(--ease-enter) both;
+  animation: login-enter 700ms var(--ease-enter) 320ms both;
 }
 
 .login-card--placeholder {
@@ -105,7 +112,7 @@
   min-height: 1.25rem;
   margin: -8px 0 -4px;
   font-size: 0.875rem;
-  color: var(--vermillion-300);
+  color: var(--coral-300);
 }
 
 @keyframes login-enter {

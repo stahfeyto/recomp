@@ -1,7 +1,8 @@
 "use client";
 
 import { Check, Minus, Plus } from "lucide-react";
-import { useActionState, useId, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
+import { useActionState, useId, useState, type CSSProperties } from "react";
 import { saveToday, type SaveTodayState } from "@/app/(app)/medidas/actions";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
@@ -39,7 +40,7 @@ export function TodayForm({ data }: { data: TodayData }) {
   const [state, action, pending] = useActionState(async (prev: SaveTodayState, fd: FormData) => {
     const res = await saveToday(prev, fd);
     if (res.status === "ok") {
-      haptic(15);
+      haptic([12, 40, 18]);
       setSaved((n) => n + 1);
       toast({ variant: "success", title: res.message ?? "Guardado" });
     } else if (res.errors?.form) {
@@ -100,7 +101,7 @@ export function TodayForm({ data }: { data: TodayData }) {
         </p>
       )}
 
-      <Button type="submit" variant="primary" size="lg" block loading={pending} disabled={nothing}>
+      <Button type="submit" variant="lime" size="lg" block loading={pending} disabled={nothing}>
         {pending ? "A guardar…" : <>Guardar {date === data.today ? "hoje" : formatDayMonth(date)}</>}
       </Button>
 
@@ -108,6 +109,7 @@ export function TodayForm({ data }: { data: TodayData }) {
         <p key={saved} className="today-form__saved" role="status">
           <span className="today-form__check" aria-hidden="true">
             <Check />
+            <Burst />
           </span>
           Guardado
         </p>
@@ -115,6 +117,20 @@ export function TodayForm({ data }: { data: TodayData }) {
     </form>
   );
 }
+
+/** Dez partículas (lima e violeta) a sair do ✓ quando se guarda. */
+function Burst() {
+  return (
+    <span className="burst" aria-hidden="true">
+      {Array.from({ length: 10 }, (_, i) => (
+        <i key={i} style={{ "--a": `${i * 36}deg` } as CSSProperties} />
+      ))}
+    </span>
+  );
+}
+
+type Side = "minus" | "plus";
+type Pop = { id: number; side: Side; text: string };
 
 function StepperField({
   label,
@@ -141,14 +157,50 @@ function StepperField({
 }) {
   const id = useId();
   const hintId = `${id}-hint`;
+  // "+0,1" que salta do botão tocado e o campo a piscar em lima
+  const [pop, setPop] = useState<Pop | null>(null);
+  const [flash, setFlash] = useState(0);
 
   function step(delta: number) {
     const current = parseDecimal(state.text) ?? last?.value ?? 0;
     const next = Math.round((current + delta) * 10) / 10;
     onChange({ text: fmt1(Math.max(0, next)), touched: true });
+    haptic(8);
+    setPop({ id: Date.now(), side: delta < 0 ? "minus" : "plus", text: `${delta < 0 ? "−" : "+"}0,1` });
+    setFlash((n) => n + 1);
   }
 
   const fromOtherDay = !state.touched && state.text !== "";
+
+  const stepButton = (side: Side) => (
+    <span className="stepper__btn-wrap">
+      <motion.button
+        type="button"
+        className="stepper__btn"
+        aria-label={`${side === "minus" ? "Menos" : "Mais"} 0,1 ${unit}`}
+        whileTap={{ scale: 0.88 }}
+        transition={{ type: "spring", stiffness: 650, damping: 30 }}
+        onClick={() => step(side === "minus" ? -0.1 : 0.1)}
+      >
+        {side === "minus" ? <Minus /> : <Plus />}
+      </motion.button>
+      <AnimatePresence>
+        {pop && pop.side === side && (
+          <motion.span
+            key={pop.id}
+            className="stepper__pop"
+            aria-hidden="true"
+            initial={{ opacity: 0, y: 0, scale: 0.7 }}
+            animate={{ opacity: [0, 1, 1, 0], y: -38, scale: 1 }}
+            transition={{ duration: 0.75, ease: "easeOut" }}
+            onAnimationComplete={() => setPop((p) => (p?.id === pop.id ? null : p))}
+          >
+            {pop.text}
+          </motion.span>
+        )}
+      </AnimatePresence>
+    </span>
+  );
 
   return (
     <div className="stepper" data-pending={fromOtherDay || undefined}>
@@ -163,9 +215,7 @@ function StepperField({
         )}
       </div>
       <div className="stepper__row">
-        <button type="button" className="stepper__btn" aria-label={`Menos 0,1 ${unit}`} onClick={() => step(-0.1)}>
-          <Minus />
-        </button>
+        {stepButton("minus")}
         <div className="input-affix stepper__input">
           <input
             id={id}
@@ -182,10 +232,9 @@ function StepperField({
           <span className="input-affix__unit" aria-hidden="true">
             {unit}
           </span>
+          {flash > 0 && <span key={flash} className="stepper__flash" aria-hidden="true" />}
         </div>
-        <button type="button" className="stepper__btn" aria-label={`Mais 0,1 ${unit}`} onClick={() => step(0.1)}>
-          <Plus />
-        </button>
+        {stepButton("plus")}
       </div>
       <p id={hintId} className="stepper__hint">
         {fromOtherDay && last ? (

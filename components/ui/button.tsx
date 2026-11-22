@@ -2,7 +2,8 @@ import Link from "next/link";
 import type { ComponentProps, ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
-type Variant = "primary" | "secondary" | "ghost" | "danger" | "acid";
+/** `lime` é o botão da ação principal da página (ex.: "Guardar hoje"): um por ecrã. */
+type Variant = "primary" | "secondary" | "ghost" | "danger" | "lime";
 type Size = "sm" | "md" | "lg";
 
 type StyleProps = {
