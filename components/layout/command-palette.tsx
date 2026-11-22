@@ -87,10 +87,11 @@ export function CommandPalette() {
 
   const commands = useMemo<Command[]>(
     () => [
-      { id: "reg-medida", group: "Registar", icon: Ruler, label: "Registar medição semanal", keywords: "medidas cintura braço", run: () => router.push("/medidas") },
-      { id: "reg-peso", group: "Registar", icon: Scale, label: "Registar pesagem de hoje", keywords: "peso balança", run: () => setWeightOpen(true) },
+      { id: "reg-hoje", group: "Registar", icon: Ruler, label: "Registar peso e cintura de hoje", keywords: "registar hoje peso cintura balança", run: () => router.push("/registar") },
+      { id: "reg-medida", group: "Registar", icon: Ruler, label: "Registar medidas completas", keywords: "braço peito ombros semanal", run: () => router.push("/registar") },
+      { id: "reg-peso", group: "Registar", icon: Scale, label: "Só a pesagem de hoje", keywords: "peso balança pesagem", run: () => setWeightOpen(true) },
       { id: "nav-painel", group: "Navegar", icon: LayoutDashboard, label: "Ir para o Painel", keywords: "inicio home", run: () => router.push("/") },
-      { id: "nav-medidas", group: "Navegar", icon: Ruler, label: "Ir para Medidas", keywords: "historico", run: () => router.push("/medidas") },
+      { id: "nav-medidas", group: "Navegar", icon: Ruler, label: "Ver histórico de medidas", keywords: "historico medidas editar apagar", run: () => router.push("/medidas") },
       { id: "nav-evolucao", group: "Navegar", icon: TrendingUp, label: "Ir para Evolução", keywords: "graficos comparador antes agora", run: () => router.push("/evolucao") },
       { id: "nav-metas", group: "Navegar", icon: Target, label: "Ir para Metas", keywords: "calorias macros check-in assistente", run: () => router.push("/metas") },
       { id: "nav-treino", group: "Navegar", icon: Dumbbell, label: "Ir para Treino", keywords: "plano exercicios", run: () => router.push("/treino") },

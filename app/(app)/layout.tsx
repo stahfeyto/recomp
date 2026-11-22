@@ -5,7 +5,6 @@ import { CommandPalette, CommandPaletteTrigger } from "@/components/layout/comma
 import { Dock } from "@/components/layout/dock";
 import { LoginReveal } from "@/components/layout/login-reveal";
 import { Providers } from "@/components/layout/providers";
-import { RegisterFab } from "@/components/layout/register-fab";
 import { SpotlightLayer } from "@/components/layout/spotlight-layer";
 import "./app-shell.css";
 
@@ -33,7 +32,6 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
       </header>
 
       <Dock />
-      <RegisterFab />
       <CommandPalette />
       <LoginReveal />
 

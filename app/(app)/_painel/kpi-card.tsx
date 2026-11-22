@@ -2,20 +2,24 @@ import type { ReactNode } from "react";
 import { Card } from "@/components/ui/card";
 import { CountUp } from "@/components/ui/count-up";
 import { DeltaBadge } from "@/components/ui/delta-badge";
-import { deltaTone } from "@/lib/calculations";
 import { cn } from "@/lib/cn";
 import { formatSigned } from "@/lib/format";
-import type { MeasureKey } from "@/lib/measures";
+import type { Tone } from "@/lib/metrics";
 
-/** Cartão KPI: valor grande com contagem, variação face à última medição e ao início. */
+export type KpiDelta = { label: string; delta: number; tone: Tone; unit: string };
+
+/**
+ * Cartão KPI: valor grande com contagem, etiqueta (ex.: "média de 7 dias",
+ * "poucos dados") e variações já calculadas em lib/metrics.ts.
+ */
 export function KpiCard({
   label,
   value,
   unit,
   decimals = 1,
-  toneKey,
-  previous,
-  first,
+  badge,
+  badgeTone = "neutral",
+  deltas = [],
   note,
   size = "md",
   className,
@@ -25,23 +29,24 @@ export function KpiCard({
   value: number | null;
   unit: string;
   decimals?: number;
-  /** Medida que define se subir/descer é bom. */
-  toneKey: MeasureKey;
-  previous?: number | null;
-  first?: number | null;
+  badge?: string;
+  badgeTone?: "neutral" | "warn";
+  deltas?: KpiDelta[];
   note?: ReactNode;
   size?: "md" | "lg";
   className?: string;
   children?: ReactNode;
 }) {
-  const deltas = [
-    { label: "vs anterior", base: previous },
-    { label: "desde o início", base: first },
-  ].filter((d): d is { label: string; base: number } => typeof d.base === "number" && value !== null);
-
   return (
     <Card className={cn("kpi", size === "lg" && "kpi--lg", className)}>
-      <p className="eyebrow">{label}</p>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="eyebrow">{label}</p>
+        {badge && (
+          <span className="kpi__badge" data-tone={badgeTone}>
+            {badge}
+          </span>
+        )}
+      </div>
       {value === null ? (
         <p className="text-ice-300">Sem registos ainda.</p>
       ) : (
@@ -52,19 +57,12 @@ export function KpiCard({
       )}
       {deltas.length > 0 && (
         <ul className="kpi__deltas">
-          {deltas.map((d) => {
-            const delta = (value as number) - d.base;
-            return (
-              <li key={d.label}>
-                <DeltaBadge
-                  tone={deltaTone(toneKey, delta)}
-                  delta={delta}
-                  label={`${formatSigned(delta)} ${unit}`}
-                />
-                <span className="text-xs text-ice-300">{d.label}</span>
-              </li>
-            );
-          })}
+          {deltas.map((d) => (
+            <li key={d.label}>
+              <DeltaBadge tone={d.tone} delta={d.delta} label={`${formatSigned(d.delta)} ${d.unit}`} />
+              <span className="text-sm text-ice-300">{d.label}</span>
+            </li>
+          ))}
         </ul>
       )}
       {note && <p className="kpi__note">{note}</p>}

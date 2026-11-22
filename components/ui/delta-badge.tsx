@@ -1,5 +1,5 @@
 import { ArrowDownRight, ArrowUpRight, Equal } from "lucide-react";
-import type { Tone } from "@/lib/calculations";
+import type { Tone } from "@/lib/metrics";
 import { cn } from "@/lib/cn";
 
 const TONE_TEXT: Record<Tone, string> = {

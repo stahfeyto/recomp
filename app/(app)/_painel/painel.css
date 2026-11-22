@@ -4,16 +4,18 @@
   display: grid;
   gap: 12px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  /* Topo: cintura, peso e próximo check-in. O resto vem depois. */
   grid-template-areas:
     "waist waist"
     "weight weight"
+    "checkin checkin"
     "training training"
     "macros macros"
     "arm arm"
-    "chest shoulders"
+    "chest chest"
+    "shoulders shoulders"
     "ratio ratio"
     "whr whr"
-    "checkin checkin"
     "routine routine";
 }
 
@@ -23,10 +25,11 @@
     grid-template-columns: repeat(6, minmax(0, 1fr));
     grid-template-areas:
       "waist waist waist weight weight weight"
+      "checkin checkin checkin training training training"
       "arm arm chest chest shoulders shoulders"
-      "macros macros macros checkin checkin checkin"
-      "ratio ratio ratio whr whr whr"
-      "training training training routine routine routine";
+      "macros macros macros ratio ratio ratio"
+      "macros macros macros whr whr whr"
+      "routine routine routine routine routine routine";
   }
 }
 
@@ -34,15 +37,10 @@
   .bento {
     grid-template-columns: repeat(12, minmax(0, 1fr));
     grid-template-areas:
-      "waist waist waist waist waist weight weight weight weight macros macros macros"
-      "arm arm arm chest chest chest shoulders shoulders shoulders macros macros macros"
-      "ratio ratio ratio ratio checkin checkin checkin checkin training training training training"
-      "whr whr whr whr checkin checkin checkin checkin training training training training"
-      "routine routine routine routine routine routine routine routine routine routine routine routine";
-  }
-  .routine {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 10px 24px;
+      "waist waist waist waist weight weight weight weight checkin checkin checkin checkin"
+      "training training training training training training macros macros macros macros macros macros"
+      "arm arm arm arm chest chest chest chest shoulders shoulders shoulders shoulders"
+      "ratio ratio ratio ratio whr whr whr whr routine routine routine routine";
   }
 }
 
@@ -398,4 +396,20 @@
   .ratio-meter__fill {
     animation: none;
   }
+}
+
+/* Etiqueta de fiabilidade da média (ex.: "média de 7 dias · 6", "poucos dados") */
+.kpi__badge {
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  background: rgb(220 230 255 / 0.1);
+  color: var(--ice-100);
+  white-space: nowrap;
+}
+
+.kpi__badge[data-tone="warn"] {
+  background: rgb(215 255 58 / 0.14);
+  color: var(--acid-400);
 }

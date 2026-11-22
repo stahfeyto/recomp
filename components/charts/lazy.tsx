@@ -19,8 +19,8 @@ export const WaistArmChart = dynamic(
   { ssr: false, loading: placeholder(320) },
 );
 
-export const WeightChart = dynamic(
-  () => import("./weight-chart").then((m) => m.WeightChart),
+export const DailyAverageChart = dynamic(
+  () => import("./daily-average-chart").then((m) => m.DailyAverageChart),
   { ssr: false, loading: placeholder(260) },
 );
 

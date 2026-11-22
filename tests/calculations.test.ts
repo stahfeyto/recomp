@@ -1,22 +1,18 @@
 import { describe, expect, it } from "vitest";
 import {
-  armAverage,
   daysBetween,
-  deltaTone,
   detectRecords,
   dueMeasures,
   greeting,
   lastKnownValues,
-  movingAverage7,
   nextCheckIn,
   ratio,
   round1,
-  seriesSummary,
   shiftISODate,
-  weeklyAverage,
 } from "@/lib/calculations";
 import { KCAL_MISMATCH, macroKcal, macroShares, redistribute } from "@/lib/macros";
 import { parseDecimal } from "@/lib/number";
+import { parseMeasurementForm, parseTodayForm } from "@/lib/validation/measurement";
 
 describe("datas", () => {
   it("shiftISODate atravessa meses e anos", () => {
@@ -30,29 +26,6 @@ describe("datas", () => {
   });
 });
 
-describe("média semanal das pesagens", () => {
-  const weights = [
-    { date: "2026-11-08", weightKg: 65.0 },
-    { date: "2026-11-05", weightKg: 65.4 },
-    { date: "2026-11-02", weightKg: 66.0 },
-    { date: "2026-11-01", weightKg: 70.0 }, // fora da janela de 7 dias
-  ];
-
-  it("usa só os últimos 7 dias (hoje incluído)", () => {
-    expect(weeklyAverage(weights, "2026-11-08")).toEqual({ average: 65.47, count: 3 });
-  });
-
-  it("sem pesagens na janela → null", () => {
-    expect(weeklyAverage(weights, "2026-12-31")).toBeNull();
-  });
-
-  it("média móvel de 7 dias por pesagem", () => {
-    const ma = movingAverage7(weights);
-    expect(ma.at(-1)).toEqual({ date: "2026-11-08", average: 65.47, count: 3 });
-    expect(ma[0]).toEqual({ date: "2026-11-01", average: 70, count: 1 });
-  });
-});
-
 describe("rácios", () => {
   it("ombros/cintura com os dados iniciais: 114 / 83,5 = 1,37", () => {
     expect(ratio(114, 83.5)).toBe(1.37);
@@ -62,51 +35,29 @@ describe("rácios", () => {
     expect(ratio(83.5, 171)).toBe(0.49);
   });
 
-  it("média dos braços só com os dois medidos", () => {
-    expect(armAverage({ date: "x", armRightCm: 35.5, armLeftCm: 34.5 })).toBe(35);
-    expect(armAverage({ date: "x", armRightCm: 35.5 })).toBeNull();
-  });
-
   it("round1 evita erros de vírgula flutuante", () => {
     expect(round1(83.7 - 84)).toBe(-0.3);
   });
 });
 
-describe("variação com juízo para a recomposição", () => {
-  it.each([
-    ["waistCm", -0.5, "good"],
-    ["waistCm", 0.5, "bad"],
-    ["waistCm", -0.2, "same"],
-    ["armRightCm", 0.4, "good"],
-    ["armRightCm", -0.4, "bad"],
-    ["weightKg", -1, "neutral"],
-  ] as const)("%s %s → %s", (key, delta, tone) => {
-    expect(deltaTone(key, delta)).toBe(tone);
-  });
-});
-
-describe("recordes", () => {
+describe("recordes de braço", () => {
   const others = [{ date: "2026-11-01", waistCm: 84.1, armRightCm: 35 }];
 
-  it("menor cintura e maior braço de sempre", () => {
-    expect(detectRecords({ date: "2026-11-08", waistCm: 82.6, armRightCm: 36.4 }, others).map((r) => r.kind)).toEqual([
-      "waist",
-      "arm",
-    ]);
+  it("maior braço de sempre", () => {
+    expect(detectRecords({ date: "2026-11-08", armRightCm: 36.4 }, others).map((r) => r.kind)).toEqual(["arm"]);
   });
 
   it("ao editar, não repete um recorde que já existia", () => {
-    const before = { date: "2026-11-08", waistCm: 82.6, armRightCm: 36.4 };
-    const after = { date: "2026-11-08", waistCm: 82.4, armRightCm: 36.4 };
-    expect(detectRecords(after, others, before).map((r) => r.kind)).toEqual(["waist"]);
+    const before = { date: "2026-11-08", armRightCm: 36.4 };
+    expect(detectRecords({ date: "2026-11-08", armRightCm: 36.4, waistCm: 82 }, others, before)).toEqual([]);
   });
 
-  it("sem histórico não há recorde", () => {
-    expect(detectRecords({ date: "x", waistCm: 80 }, [])).toEqual([]);
+  it("a cintura já não gera recordes (com medições diárias seria ruído)", () => {
+    expect(detectRecords({ date: "x", waistCm: 80 }, others)).toEqual([]);
   });
 });
 
-describe("últimos valores e resumo de uma série", () => {
+describe("últimos valores", () => {
   const rows = [
     { id: 1, date: "2026-11-08", waistCm: 83 },
     { id: 2, date: "2026-11-01", waistCm: 84, armRightCm: 35 },
@@ -123,11 +74,6 @@ describe("últimos valores e resumo de uma série", () => {
     expect(lastKnownValues(rows, { excludeId: 1 }).waistCm?.value).toBe(84);
     expect(lastKnownValues(rows, { beforeDate: "2026-11-01" }).waistCm?.value).toBe(84.5);
   });
-
-  it("seriesSummary: atual, anterior e início", () => {
-    const s = seriesSummary(rows, (r) => r.waistCm);
-    expect(s).toMatchObject({ current: { value: 83 }, previous: { value: 84 }, first: { value: 84.5 } });
-  });
 });
 
 describe("check-in e lembretes", () => {
@@ -139,15 +85,16 @@ describe("check-in e lembretes", () => {
     });
   });
 
-  it("cintura todas as semanas, braços a cada 2 semanas", () => {
+  it("cintura todos os dias; braço, peito e ombros 1× por semana", () => {
     const due = dueMeasures(
       [
-        { date: "2026-11-05", waistCm: 83 },
+        { date: "2026-11-08", waistCm: 83 },
         { date: "2026-10-20", armRightCm: 35 },
       ],
       "2026-11-08",
     );
-    expect(due).toMatchObject({ waist: false, arms: true, daysSinceWaist: 3, daysSinceArms: 19 });
+    expect(due).toEqual({ waistToday: true, weekly: true, daysSinceWeekly: 19 });
+    expect(dueMeasures([{ date: "2026-11-05", chestCm: 95 }], "2026-11-08")).toMatchObject({ waistToday: false, weekly: false });
   });
 
   it("saudação conforme a hora", () => {
@@ -193,5 +140,38 @@ describe("números escritos à portuguesa", () => {
     ["8,3,1", null],
   ] as const)("%j → %s", (input, expected) => {
     expect(parseDecimal(input)).toBe(expected);
+  });
+});
+
+describe("formulários", () => {
+  const fd = (fields: Record<string, string>) => {
+    const f = new FormData();
+    for (const [k, v] of Object.entries(fields)) f.set(k, v);
+    return f;
+  };
+
+  it("registo rápido: peso e cintura com vírgula ou ponto", () => {
+    const r = parseTodayForm(fd({ date: "2026-11-22", weightKg: "65,4", waistCm: "83.5" }));
+    expect(r).toEqual({ ok: true, data: { date: "2026-11-22", weightKg: 65.4, waistCm: 83.5 } });
+  });
+
+  it("registo rápido: só a cintura (o peso não vem no formulário)", () => {
+    const r = parseTodayForm(fd({ date: "2026-11-22", waistCm: "83,1" }));
+    expect(r).toEqual({ ok: true, data: { date: "2026-11-22", weightKg: null, waistCm: 83.1 } });
+  });
+
+  it("registo rápido vazio → erro", () => {
+    expect(parseTodayForm(fd({ date: "2026-11-22" })).ok).toBe(false);
+  });
+
+  it("formulário completo só devolve os campos que vêm nele (o peso antigo não é tocado)", () => {
+    const r = parseMeasurementForm(fd({ date: "2026-11-22", armRightCm: "35,9", armLeftCm: "", notes: "" }));
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.provided).toEqual(["armRightCm", "armLeftCm", "notes"]);
+      expect("weightKg" in r.data).toBe(false);
+      expect("waistCm" in r.data).toBe(false);
+      expect(r.data.armLeftCm).toBeNull();
+    }
   });
 });

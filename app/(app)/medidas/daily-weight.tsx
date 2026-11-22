@@ -20,7 +20,7 @@ export function DailyWeightCard({
   recent,
 }: {
   today: string;
-  weekly: { average: number; count: number } | null;
+  weekly: { value: number; count: number } | null;
   todayWeight: DailyWeightRow | null;
   recent: DailyWeightRow[];
 }) {
@@ -59,7 +59,7 @@ export function DailyWeightCard({
 
       {weekly ? (
         <p className="num font-display text-5xl font-medium leading-none">
-          {formatDecimal(weekly.average, { maximumFractionDigits: 1, minimumFractionDigits: 1 })}
+          {formatDecimal(weekly.value, { maximumFractionDigits: 1, minimumFractionDigits: 1 })}
           <span className="ml-2 text-xl text-ice-300">kg</span>
         </p>
       ) : (

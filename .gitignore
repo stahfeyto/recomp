@@ -49,3 +49,6 @@ next-env.d.ts
 
 # Postgres local de desenvolvimento (PGlite)
 /.pglite/
+
+# Exportações da base de dados (dados pessoais): nunca no git
+/backups/

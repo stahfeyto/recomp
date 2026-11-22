@@ -30,7 +30,7 @@ async function MetasContent() {
   const d = await getGoalsPageData();
   return (
     <div className="grid gap-10">
-      <AssistantCard rec={d.recommendation} active={d.active} today={d.today} />
+      <AssistantCard rec={d.recommendation} active={d.active} today={d.today} week={d.currentWeek} />
 
       <section aria-labelledby="editor-h" className="grid gap-4">
         <h2 id="editor-h" className="text-xl">

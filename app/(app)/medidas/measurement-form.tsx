@@ -1,31 +1,33 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, Check } from "lucide-react";
-import { useActionState, useState, type KeyboardEvent } from "react";
+import { Check, ChevronDown } from "lucide-react";
+import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { DeltaBadge } from "@/components/ui/delta-badge";
 import { TextAreaField, TextField } from "@/components/ui/field";
 import { useToast } from "@/components/ui/toast";
-import { deltaTone } from "@/lib/calculations";
-import { cn } from "@/lib/cn";
 import type { MeasurementRow } from "@/lib/data/measurements";
 import { formatDayMonth, formatSigned } from "@/lib/format";
 import { haptic } from "@/lib/haptics";
-import { FORM_STEPS, MEASURES, type MeasureKey } from "@/lib/measures";
+import { MEASURE_BY_KEY, type MeasureKey } from "@/lib/measures";
+import { comparePoints, toneOf } from "@/lib/metrics";
 import { formatDecimal, parseDecimal } from "@/lib/number";
 import { saveMeasurement, type SaveMeasurementState } from "./actions";
 import { Celebration } from "./celebration";
-import { DeltaBadge } from "@/components/ui/delta-badge";
 
 type LastValues = Partial<Record<MeasureKey, { value: number; date: string }>>;
 
 const initialState: SaveMeasurementState = { status: "idle", nonce: 0 };
 
+/** Secções do formulário completo (o peso e a cintura diários estão em "Registar hoje"). */
+const SECTIONS: { title: string; keys: MeasureKey[] }[] = [
+  { title: "Braços", keys: ["armRightCm", "armLeftCm"] },
+  { title: "Peito e ombros", keys: ["chestCm", "shouldersCm"] },
+  { title: "Extras", keys: ["thighCm", "calfCm", "neckCm"] },
+];
+
 function toInputValue(n: number | null | undefined): string {
   return typeof n === "number" ? formatDecimal(n, { maximumFractionDigits: 2 }) : "";
-}
-
-function emptyValues(): Record<MeasureKey, string> {
-  return Object.fromEntries(MEASURES.map((m) => [m.key, ""])) as Record<MeasureKey, string>;
 }
 
 function strengthValue(v: boolean | null | undefined): string {
@@ -33,8 +35,9 @@ function strengthValue(v: boolean | null | undefined): string {
 }
 
 /**
- * Registo semanal. No telemóvel em passos (só os campos do passo atual ficam visíveis,
- * mas todos vão no mesmo formulário); no desktop / no modo edição, tudo de uma vez.
+ * Formulário completo (braço, peito, ombros, extras, força, notas) em secções que
+ * abrem e fecham. Ao editar um registo, mostra também o peso e a cintura que esse
+ * registo tiver — e só grava os campos mostrados, por isso nada é apagado sem querer.
  */
 export function MeasurementForm({
   today,
@@ -44,210 +47,167 @@ export function MeasurementForm({
 }: {
   today: string;
   lastValues: LastValues;
-  /** Com `initial` o formulário edita esse registo. */
   initial?: MeasurementRow;
   onDone?: () => void;
 }) {
   const editing = Boolean(initial);
-  const { toast } = useToast();
+  const sections = editing
+    ? [
+        ...(typeof initial?.weightKg === "number" || typeof initial?.waistCm === "number"
+          ? [
+              {
+                title: "Peso e cintura",
+                keys: (["weightKg", "waistCm"] as MeasureKey[]).filter((k) => typeof initial?.[k] === "number"),
+              },
+            ]
+          : []),
+        ...SECTIONS,
+      ]
+    : SECTIONS;
+  const allKeys = sections.flatMap((s) => s.keys);
 
-  const [values, setValues] = useState<Record<MeasureKey, string>>(() => {
-    if (!initial) return emptyValues();
-    return Object.fromEntries(
-      MEASURES.map((m) => [m.key, toInputValue(initial[m.key])]),
-    ) as Record<MeasureKey, string>;
-  });
+  const { toast } = useToast();
+  const [values, setValues] = useState<Partial<Record<MeasureKey, string>>>(() =>
+    Object.fromEntries(allKeys.map((k) => [k, toInputValue(initial?.[k])])),
+  );
   const [date, setDate] = useState(initial?.date ?? today);
   const [strength, setStrength] = useState(strengthValue(initial?.strengthDropping));
   const [notes, setNotes] = useState(initial?.notes ?? "");
-  const [step, setStep] = useState(0);
   const [celebrate, setCelebrate] = useState(0);
 
-  // A ação chama o servidor e reage à resposta (toasts, passo com erro, limpar campos).
-  const [state, action, pending] = useActionState(
-    async (prev: SaveMeasurementState, formData: FormData) => {
-      const res = await saveMeasurement(prev, formData);
-
-      if (res.status === "error") {
-        const firstKey = MEASURES.find((m) => res.errors?.[m.key]);
-        if (res.errors?.date) setStep(0);
-        else if (firstKey) setStep(firstKey.step);
-        if (res.errors?.form) toast({ variant: "error", title: res.errors.form });
-        return res;
-      }
-
-      haptic(15);
-      const records = res.records ?? [];
-      if (records.length > 0) {
-        // Um só toast: o recorde vai na descrição.
-        toast({
-          variant: "success",
-          title: records.length > 1 ? "Novos recordes!" : "Novo recorde!",
-          description: records
-            .map(
-              (r) =>
-                `${r.kind === "waist" ? "Menor cintura" : "Maior braço"}: ${formatDecimal(r.value)} cm (antes ${formatDecimal(r.previous)})`,
-            )
-            .join(" · "),
-          duration: 7000,
-        });
-      } else {
-        toast({ variant: "success", title: res.message ?? "Guardado" });
-      }
-      if (records.length > 0) {
-        setCelebrate((n) => n + 1);
-        haptic([15, 60, 25]);
-      }
-
-      if (editing) {
-        onDone?.();
-      } else {
-        setValues(emptyValues());
-        setStrength("");
-        setNotes("");
-        setDate(today);
-        setStep(0);
-      }
+  const [state, action, pending] = useActionState(async (prev: SaveMeasurementState, formData: FormData) => {
+    const res = await saveMeasurement(prev, formData);
+    if (res.status === "error") {
+      if (res.errors?.form) toast({ variant: "error", title: res.errors.form });
       return res;
-    },
-    initialState,
-  );
+    }
+    haptic(15);
+    const records = res.records ?? [];
+    if (records.length > 0) {
+      toast({
+        variant: "success",
+        title: "Novo recorde de braço!",
+        description: records.map((r) => `${formatDecimal(r.value)} cm (antes ${formatDecimal(r.previous)})`).join(" · "),
+        duration: 7000,
+      });
+      setCelebrate((n) => n + 1);
+      haptic([15, 60, 25]);
+    } else {
+      toast({ variant: "success", title: res.message ?? "Guardado" });
+    }
+    if (editing) onDone?.();
+    else {
+      setValues(Object.fromEntries(allKeys.map((k) => [k, ""])));
+      setStrength("");
+      setNotes("");
+      setDate(today);
+    }
+    return res;
+  }, initialState);
 
   const errors = state.status === "error" ? (state.errors ?? {}) : {};
-  const lastStep = FORM_STEPS.length - 1;
-
-  const setValue = (key: MeasureKey, v: string) => setValues((cur) => ({ ...cur, [key]: v }));
-
-  // No telemóvel, "Enter" num campo avança para o passo seguinte em vez de gravar.
-  const onFieldKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key !== "Enter" || editing || step === lastStep) return;
-    if (!window.matchMedia("(max-width: 767px)").matches) return;
-    e.preventDefault();
-    setStep((s) => Math.min(lastStep, s + 1));
-  };
 
   function hintFor(key: MeasureKey) {
     const last = lastValues[key];
     if (!last) return undefined;
-    const unit = MEASURES.find((m) => m.key === key)!.unit;
-    const current = parseDecimal(values[key]);
+    const unit = MEASURE_BY_KEY[key].unit;
+    const current = parseDecimal(values[key] ?? "");
     if (current === null) {
       return (
         <>
-          Última: {formatDecimal(last.value)} {unit} · {formatDayMonth(last.date)}
+          Último: {formatDecimal(last.value)} {unit} · {formatDayMonth(last.date)}
         </>
       );
     }
-    const delta = current - last.value;
+    const c = comparePoints({ date, value: current }, last);
     return (
       <DeltaBadge
-        tone={deltaTone(key, delta)}
-        delta={delta}
-        label={`${formatSigned(delta)} ${unit} face a ${formatDecimal(last.value)} (${formatDayMonth(last.date)})`}
+        tone={toneOf(key, c.trend)}
+        delta={c.delta}
+        label={`${formatSigned(c.delta)} ${unit} face a ${formatDecimal(last.value)} (${formatDayMonth(last.date)})${c.trend === "same" ? " · igual" : ""}`}
       />
     );
   }
 
+  const sectionHasError = (keys: MeasureKey[]) => keys.some((k) => errors[k]);
+
   return (
-    <form
-      action={action}
-      className={cn("measure-form", editing && "measure-form--full")}
-      data-step={step}
-      noValidate
-    >
+    <form action={action} className="full-form" noValidate>
       {initial && <input type="hidden" name="id" value={initial.id} />}
 
-      {!editing && (
-        <div className="measure-form__progress" aria-hidden="true">
-          <div className="flex items-baseline justify-between text-sm">
-            <span className="font-medium text-ice-100">{FORM_STEPS[step].title}</span>
-            <span className="num text-ice-300">
-              {step + 1} / {FORM_STEPS.length}
-            </span>
-          </div>
-          <div className="measure-form__bar">
-            <span style={{ transform: `scaleX(${(step + 1) / FORM_STEPS.length})` }} />
-          </div>
-        </div>
-      )}
+      <TextField
+        label="Data"
+        name="date"
+        type="date"
+        value={date}
+        max={today}
+        onChange={(e) => setDate(e.target.value)}
+        error={errors.date}
+        required
+      />
 
-      {FORM_STEPS.map((s, i) => (
-        <fieldset
-          key={s.title}
-          className="measure-form__step"
-          data-active={i === step ? "true" : "false"}
-        >
-          <legend className="measure-form__legend">{s.title}</legend>
-          <div className="measure-form__fields">
-            {i === 0 && (
-              <TextField
-                label="Data"
-                name="date"
-                type="date"
-                value={date}
-                max={today}
-                onChange={(e) => setDate(e.target.value)}
-                error={errors.date}
-                required
-              />
-            )}
-
-            {MEASURES.filter((m) => m.step === i).map((m) => (
-              <TextField
-                key={m.key}
-                label={m.optional ? `${m.label} (opcional)` : m.label}
-                name={m.key}
-                unit={m.unit}
-                size="xl"
-                decimal
-                value={values[m.key]}
-                onChange={(e) => setValue(m.key, e.target.value)}
-                onKeyDown={onFieldKeyDown}
-                placeholder={lastValues[m.key] ? formatDecimal(lastValues[m.key]!.value) : undefined}
-                hint={hintFor(m.key)}
-                error={errors[m.key]}
-              />
-            ))}
-
-            {i === lastStep && (
-              <>
-                <fieldset className="field">
-                  <legend className="field__label mb-1.5">A força está a cair?</legend>
-                  <div className="segmented" role="radiogroup">
-                    {[
-                      { v: "nao", l: "Não" },
-                      { v: "sim", l: "Sim" },
-                      { v: "", l: "Não sei" },
-                    ].map((o) => (
-                      <label key={o.l}>
-                        <input
-                          type="radio"
-                          name="strength"
-                          value={o.v}
-                          checked={strength === o.v}
-                          onChange={() => setStrength(o.v)}
-                        />
-                        <span>{o.l}</span>
-                      </label>
-                    ))}
-                  </div>
-                  <p className="field__hint mt-1.5">Usado pelo assistente de check-in.</p>
-                </fieldset>
-                <TextAreaField
-                  label="Notas (opcional)"
-                  name="notes"
-                  rows={3}
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Ex.: medido de manhã, antes de comer"
-                  error={errors.notes}
-                  className="measure-form__notes"
+      {sections.map((s, i) => (
+        <details key={s.title} className="full-form__section" open={editing || i === 0 || sectionHasError(s.keys)}>
+          <summary>
+            <span>{s.title}</span>
+            <ChevronDown aria-hidden="true" />
+          </summary>
+          <div className="full-form__fields">
+            {s.keys.map((key) => {
+              const m = MEASURE_BY_KEY[key];
+              return (
+                <TextField
+                  key={key}
+                  label={m.optional ? `${m.label} (opcional)` : m.label}
+                  name={key}
+                  unit={m.unit}
+                  size="xl"
+                  decimal
+                  value={values[key] ?? ""}
+                  onChange={(e) => setValues((cur) => ({ ...cur, [key]: e.target.value }))}
+                  placeholder={lastValues[key] ? formatDecimal(lastValues[key]!.value) : undefined}
+                  hint={hintFor(key)}
+                  error={errors[key]}
                 />
-              </>
-            )}
+              );
+            })}
           </div>
-        </fieldset>
+        </details>
       ))}
+
+      <details className="full-form__section" open={editing}>
+        <summary>
+          <span>Força e notas</span>
+          <ChevronDown aria-hidden="true" />
+        </summary>
+        <div className="full-form__fields">
+          <fieldset className="field">
+            <legend className="field__label mb-1.5">A força está a cair?</legend>
+            <div className="segmented" role="radiogroup">
+              {[
+                { v: "nao", l: "Não" },
+                { v: "sim", l: "Sim" },
+                { v: "", l: "Não sei" },
+              ].map((o) => (
+                <label key={o.l}>
+                  <input type="radio" name="strength" value={o.v} checked={strength === o.v} onChange={() => setStrength(o.v)} />
+                  <span>{o.l}</span>
+                </label>
+              ))}
+            </div>
+            <p className="field__hint mt-1.5">Usado pelo assistente de check-in.</p>
+          </fieldset>
+          <TextAreaField
+            label="Notas (opcional)"
+            name="notes"
+            rows={3}
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Ex.: medido de manhã, contraído"
+            error={errors.notes}
+          />
+        </div>
+      </details>
 
       {errors.form && (
         <p className="field__error" role="alert">
@@ -255,35 +215,17 @@ export function MeasurementForm({
         </p>
       )}
 
-      <div className="measure-form__actions">
-        {!editing && (
-          <div className="measure-form__nav">
-            <Button
-              variant="ghost"
-              onClick={() => setStep((s) => Math.max(0, s - 1))}
-              disabled={step === 0}
-            >
-              <ArrowLeft /> Anterior
-            </Button>
-            {step < lastStep && (
-              <Button variant="secondary" onClick={() => setStep((s) => s + 1)}>
-                Seguinte <ArrowRight />
-              </Button>
-            )}
-          </div>
-        )}
-        <div className="measure-form__submit">
-          {celebrate > 0 && <Celebration key={celebrate} />}
-          <Button type="submit" variant="primary" size="lg" block loading={pending}>
-            {pending ? (
-              "A guardar…"
-            ) : (
-              <>
-                <Check /> {editing ? "Guardar alterações" : "Guardar medição"}
-              </>
-            )}
-          </Button>
-        </div>
+      <div className="measure-form__submit">
+        {celebrate > 0 && <Celebration key={celebrate} />}
+        <Button type="submit" variant="primary" size="lg" block loading={pending}>
+          {pending ? (
+            "A guardar…"
+          ) : (
+            <>
+              <Check /> {editing ? "Guardar alterações" : "Guardar medidas"}
+            </>
+          )}
+        </Button>
       </div>
     </form>
   );

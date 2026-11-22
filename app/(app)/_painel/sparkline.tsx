@@ -1,4 +1,4 @@
-import type { Point } from "@/lib/calculations";
+import type { Point } from "@/lib/metrics";
 import { formatDayMonth } from "@/lib/format";
 import { formatDecimal } from "@/lib/number";
 

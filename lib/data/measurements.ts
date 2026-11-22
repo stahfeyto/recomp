@@ -1,40 +1,72 @@
 import "server-only";
 import { desc } from "drizzle-orm";
 import { getDb, schema } from "@/db";
-import { lastKnownValues, weeklyAverage } from "@/lib/calculations";
+import { lastKnownValues } from "@/lib/calculations";
 import { todayISO } from "@/lib/dates";
+import { currentWindow, lastAt, seriesOf, shiftISODate, weightSeries } from "@/lib/metrics";
 import { requireSession } from "@/lib/session";
 
-/** Registo semanal no formato enviado aos componentes de cliente (sem timestamps). */
-export type MeasurementRow = Omit<
-  typeof schema.measurements.$inferSelect,
-  "createdAt" | "updatedAt"
->;
+/** Registo de medidas no formato enviado aos componentes de cliente (sem timestamps). */
+export type MeasurementRow = Omit<typeof schema.measurements.$inferSelect, "createdAt" | "updatedAt">;
 export type DailyWeightRow = Omit<typeof schema.dailyWeights.$inferSelect, "createdAt">;
 
-export async function getMeasurementsPageData() {
-  await requireSession();
+async function loadAll() {
   const db = await getDb();
-
   const [measurementRows, weightRows] = await Promise.all([
     db.select().from(schema.measurements).orderBy(desc(schema.measurements.date)),
-    db.select().from(schema.dailyWeights).orderBy(desc(schema.dailyWeights.date)).limit(60),
+    db.select().from(schema.dailyWeights).orderBy(desc(schema.dailyWeights.date)).limit(400),
   ]);
-
-  const measurements: MeasurementRow[] = measurementRows.map(
-    ({ createdAt: _c, updatedAt: _u, ...rest }) => rest,
-  );
+  const measurements: MeasurementRow[] = measurementRows.map(({ createdAt: _c, updatedAt: _u, ...rest }) => rest);
   const dailyWeights: DailyWeightRow[] = weightRows.map(({ createdAt: _c, ...rest }) => rest);
-  const today = todayISO();
+  return { measurements, dailyWeights };
+}
 
+/** Histórico (página Medidas): registos, pesagens e últimos valores para o formulário de edição. */
+export async function getMeasurementsPageData() {
+  await requireSession();
+  const { measurements, dailyWeights } = await loadAll();
+  const today = todayISO();
+  const weights = weightSeries(dailyWeights, measurements);
   return {
     today,
     measurements,
     dailyWeights,
     lastValues: lastKnownValues(measurements),
-    weekly: weeklyAverage(dailyWeights, today),
+    weekly: currentWindow(weights, today),
     todayWeight: dailyWeights.find((w) => w.date === today) ?? null,
   };
 }
 
 export type MeasurementsPageData = Awaited<ReturnType<typeof getMeasurementsPageData>>;
+
+/** "Registar hoje": valores de hoje e de ontem, último valor e médias de 7 dias. */
+export async function getTodayData() {
+  await requireSession();
+  const { measurements, dailyWeights } = await loadAll();
+  const today = todayISO();
+  const yesterday = shiftISODate(today, -1);
+  const weights = weightSeries(dailyWeights, measurements);
+  const waists = seriesOf(measurements, (r) => r.waistCm);
+
+  const valueOn = (pts: typeof weights, date: string) => pts.find((p) => p.date === date)?.value ?? null;
+
+  return {
+    today,
+    weight: {
+      today: dailyWeights.find((w) => w.date === today)?.weightKg ?? null,
+      yesterday: valueOn(weights, yesterday),
+      last: lastAt(weights, today),
+      week: currentWindow(weights, today),
+    },
+    waist: {
+      today: valueOn(waists, today),
+      yesterday: valueOn(waists, yesterday),
+      last: lastAt(waists, today),
+      week: currentWindow(waists, today),
+    },
+    /** Últimos valores das medidas semanais (dicas do formulário completo). */
+    lastValues: lastKnownValues(measurements),
+  };
+}
+
+export type TodayData = Awaited<ReturnType<typeof getTodayData>>;

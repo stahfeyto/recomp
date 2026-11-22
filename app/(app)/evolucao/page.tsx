@@ -15,7 +15,7 @@ export default function EvolucaoPage() {
       <PageHeader
         eyebrow="Gráficos"
         title="Evolução"
-        description="Cintura e braço lado a lado, peso com média semanal, proporção e o comparador Antes / Agora."
+        description="Cintura e peso dia a dia com a média de 7 dias, braço semanal, proporção e o comparador Antes / Agora."
       />
       <Suspense fallback={<EvolucaoSkeleton />}>
         <EvolucaoContent />

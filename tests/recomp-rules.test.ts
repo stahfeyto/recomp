@@ -1,158 +1,195 @@
 import { describe, expect, it } from "vitest";
-import {
-  CARB_STEP_KCAL,
-  FAT_CUT_KCAL,
-  applyAdjustment,
-  recommend,
-  trend,
-  type CheckInRow,
-} from "@/lib/recomp-rules";
+import { CUT_A, CUT_B, RAISE, applyAdjustment, recommend, type CheckInRow } from "@/lib/recomp-rules";
+import type { Point } from "@/lib/metrics";
 
-const TODAY = "2026-11-08";
-const GOAL = "2026-10-01"; // último ajuste há mais de 21 dias
+const TODAY = "2026-12-20";
+const GOAL = "2026-11-01"; // último ajuste há mais de 21 dias
 
-/**
- * Três registos em 3 semanas: cintura w0 → w1 e braços a0 → a1 (os dois braços iguais).
- * A janela "antes" começa a 18 out (há 21 dias) e a "depois" acaba a 8 nov.
- */
-function rows(w0: number, w1: number, a0: number | null, a1: number | null, strengthDropping = false): CheckInRow[] {
-  return [
-    { date: "2026-10-18", waistCm: w0, ...(a0 !== null ? { armRightCm: a0, armLeftCm: a0 } : {}) },
-    { date: "2026-11-01", waistCm: (w0 + w1) / 2 },
-    {
-      date: "2026-11-08",
-      waistCm: w1,
-      ...(a1 !== null ? { armRightCm: a1, armLeftCm: a1 } : {}),
-      strengthDropping,
-    },
-  ];
+/** Datas de `from` durante `n` dias. */
+function days(from: string, n: number): string[] {
+  const out: string[] = [];
+  const d = new Date(`${from}T00:00:00Z`);
+  for (let i = 0; i < n; i++) {
+    out.push(d.toISOString().slice(0, 10));
+    d.setUTCDate(d.getUTCDate() + 1);
+  }
+  return out;
 }
 
-describe("trend (±0,3 cm = igual)", () => {
-  it.each([
-    [-0.3, "down"],
-    [-0.29, "same"],
-    [0, "same"],
-    [0.29, "same"],
-    [0.3, "up"],
-  ] as const)("%s cm → %s", (delta, expected) => {
-    expect(trend(delta)).toBe(expected);
+/** Cintura diária numa semana (7 dias a partir de `from`) com o valor `v`. */
+const waistWeek = (from: string, v: number, n = 7): CheckInRow[] => days(from, n).map((date) => ({ date, waistCm: v }));
+/** Pesagens diárias numa semana. */
+const weightWeek = (from: string, v: number, n = 7): Point[] => days(from, n).map((date) => ({ date, value: v }));
+
+// Três semanas seguidas que terminam a 20 dez: W2 = 30 nov–6 dez, W1 = 7–13 dez, W0 = 14–20 dez.
+const W2 = "2026-11-30";
+const W1 = "2026-12-07";
+const W0 = "2026-12-14";
+
+const base = (overrides: Partial<Parameters<typeof recommend>[0]> = {}) =>
+  recommend({ measurements: [], weights: [], lastGoalDate: GOAL, today: TODAY, ...overrides });
+
+describe("condição A: cintura +0,5 cm (média) e peso +0,2 kg", () => {
+  it("corta 150 kcal aos hidratos (−38 g)", () => {
+    const r = base({
+      measurements: [...waistWeek(W1, 83), ...waistWeek(W0, 83.6)],
+      weights: [...weightWeek(W1, 65), ...weightWeek(W0, 65.3)],
+    });
+    expect(r.kind).toBe("cut-a");
+    expect(r.adjustment).toEqual({ ...CUT_A });
+    expect(r.adjustment).toEqual({ kcal: -150, carbsG: -38, fatG: 0 });
+    expect(r.message.length).toBeGreaterThan(20);
+  });
+
+  it("peso a subir menos de 0,2 kg → não corta", () => {
+    const r = base({
+      measurements: [...waistWeek(W1, 83), ...waistWeek(W0, 83.6)],
+      weights: [...weightWeek(W1, 65), ...weightWeek(W0, 65.1)],
+    });
+    expect(r.adjustment).toBeNull();
+    expect(r.kind).toBe("watch");
+  });
+
+  it("menos de 5 pesagens numa das semanas → não corta", () => {
+    const r = base({
+      measurements: [...waistWeek(W1, 83), ...waistWeek(W0, 83.6)],
+      weights: [...weightWeek(W1, 65, 4), ...weightWeek(W0, 65.5)],
+    });
+    expect(r.adjustment).toBeNull();
   });
 });
 
-describe("tabela da secção 7.6", () => {
-  it("cintura a descer, braço a subir → perfeito, sem ajuste", () => {
-    const r = recommend(rows(84, 83.4, 35, 35.4), GOAL, TODAY);
-    expect(r.kind).toBe("perfect");
+describe("condição B: cintura a subir em 2 check-ins seguidos (semanas de 7 dias)", () => {
+  it("três médias seguidas, cada uma +0,3 cm → corta 125 kcal aos hidratos (−31 g)", () => {
+    const r = base({ measurements: [...waistWeek(W2, 83), ...waistWeek(W1, 83.3), ...waistWeek(W0, 83.6)] });
+    expect(r.kind).toBe("cut-b");
+    expect(r.adjustment).toEqual({ ...CUT_B });
+  });
+
+  it("um dos passos abaixo de 0,3 cm → não corta", () => {
+    const r = base({ measurements: [...waistWeek(W2, 83), ...waistWeek(W1, 83.2), ...waistWeek(W0, 83.5)] });
     expect(r.adjustment).toBeNull();
+  });
+
+  it("dados antigos: usa o valor único da semana nas semanas anteriores", () => {
+    const r = base({
+      measurements: [
+        { date: "2026-12-06", waistCm: 83 }, // semana antiga, uma medição
+        { date: "2026-12-13", waistCm: 83.3 }, // semana antiga, uma medição
+        ...waistWeek(W0, 83.6),
+      ],
+    });
+    expect(r.kind).toBe("cut-b");
+  });
+
+  it("semana anterior com 2–3 medições (poucos dados) não conta", () => {
+    const r = base({
+      measurements: [...waistWeek(W2, 83), ...waistWeek(W1, 83.3, 3), ...waistWeek(W0, 83.6)],
+    });
+    expect(r.kind).toBe("collect");
+  });
+});
+
+describe("semana atípica", () => {
+  it("cumpre a condição A, mas não corta", () => {
+    const r = base({
+      measurements: [...waistWeek(W1, 83), ...waistWeek(W0, 83.6)],
+      weights: [...weightWeek(W1, 65), ...weightWeek(W0, 65.3)],
+      atypicalWeek: true,
+    });
+    expect(r.kind).toBe("atypical");
+    expect(r.adjustment).toBeNull();
+    expect(r.message).toMatch(/atípica/);
+  });
+});
+
+describe("manter e recolher mais dados", () => {
+  it("sem medições de cintura", () => {
+    expect(base().kind).toBe("collect");
+  });
+
+  it("semana atual com uma medição única (dados antigos)", () => {
+    const r = base({ measurements: [{ date: "2026-12-13", waistCm: 83 }, { date: "2026-12-20", waistCm: 84.5 }] });
+    expect(r.kind).toBe("collect");
+    expect(r.message).toMatch(/medição única/);
+  });
+
+  it("semana atual com poucos dados (3 medições)", () => {
+    const r = base({ measurements: [...waistWeek(W1, 83), ...waistWeek("2026-12-18", 84, 3)] });
+    expect(r.kind).toBe("collect");
+    expect(r.message).toMatch(/3 medições/);
+  });
+
+  it("sem semana anterior para comparar", () => {
+    expect(base({ measurements: waistWeek(W0, 83) }).kind).toBe("collect");
+  });
+});
+
+describe("outras recomendações", () => {
+  const arms = (pairs: Array<[string, number]>): CheckInRow[] =>
+    pairs.map(([date, v]) => ({ date, armRightCm: v, armLeftCm: v }));
+
+  it("cintura a descer, braço (4 semanas) e força a cair → subir 125 kcal", () => {
+    const r = base({
+      measurements: [
+        ...waistWeek(W1, 84),
+        ...waistWeek(W0, 83.4).map((m, i) => (i === 6 ? { ...m, strengthDropping: true } : m)),
+        ...arms([["2026-11-22", 35.5], ["2026-12-20", 34.8]]),
+      ],
+    });
+    expect(r.kind).toBe("raise");
+    expect(r.adjustment).toEqual({ ...RAISE });
   });
 
   it("cintura a descer, braço igual → perfeito", () => {
-    expect(recommend(rows(84, 83.4, 35, 35.1), GOAL, TODAY).kind).toBe("perfect");
+    const r = base({ measurements: [...waistWeek(W1, 84), ...waistWeek(W0, 83.5), ...arms([["2026-11-22", 35], ["2026-12-20", 35.2]])] });
+    expect(r.kind).toBe("perfect");
   });
 
-  it("cintura igual, braço a subir → recomposição a funcionar", () => {
-    const r = recommend(rows(84, 83.9, 35, 35.4), GOAL, TODAY);
+  it("cintura igual, braço a subir (4 semanas) → a funcionar", () => {
+    const r = base({ measurements: [...waistWeek(W1, 84), ...waistWeek(W0, 84.1), ...arms([["2026-11-22", 35], ["2026-12-20", 35.6]])] });
     expect(r.kind).toBe("working");
+  });
+
+  it("cintura e braço iguais há 6 semanas → aviso de estagnação, sem corte", () => {
+    const r = base({
+      measurements: [
+        ...waistWeek("2026-11-02", 84),
+        ...waistWeek(W1, 84.1),
+        ...waistWeek(W0, 84.1),
+        ...arms([["2026-11-08", 35], ["2026-12-20", 35.1]]),
+      ],
+    });
+    expect(r.kind).toBe("stagnation");
     expect(r.adjustment).toBeNull();
   });
 
-  it("cintura igual, braço igual → retirar 100–150 kcal (hidratos)", () => {
-    const r = recommend(rows(84, 84.1, 35, 35.1), GOAL, TODAY);
-    expect(r.kind).toBe("cut");
-    expect(r.adjustment).toEqual({ kcal: -CARB_STEP_KCAL, carbsG: -31, fatG: 0 });
-  });
-
-  it("cintura a subir ≥ 0,5 cm (braço a subir) → retirar 150 kcal à gordura", () => {
-    const r = recommend(rows(84, 84.5, 35, 35.5), GOAL, TODAY);
-    expect(r.kind).toBe("cut-fat");
-    expect(r.adjustment).toEqual({ kcal: -FAT_CUT_KCAL, carbsG: 0, fatG: -17 });
-  });
-
-  it("cintura a subir ≥ 0,5 cm (braço igual) → retirar 150 kcal à gordura", () => {
-    expect(recommend(rows(84, 84.6, 35, 35), GOAL, TODAY).kind).toBe("cut-fat");
-  });
-
-  it("cintura a descer, braço e força a cair → subir 100–150 kcal", () => {
-    const r = recommend(rows(84, 83.4, 35, 34.6, true), GOAL, TODAY);
-    expect(r.kind).toBe("raise");
-    expect(r.strengthDropping).toBe(true);
-    expect(r.adjustment).toEqual({ kcal: CARB_STEP_KCAL, carbsG: 31, fatG: 0 });
+  it("a regra antiga 'cintura igual e braço igual → cortar' já não existe", () => {
+    const r = base({ measurements: [...waistWeek(W1, 84), ...waistWeek(W0, 84), ...arms([["2026-11-22", 35], ["2026-12-20", 35]])] });
+    expect(r.adjustment).toBeNull();
   });
 });
 
-describe("casos que a tabela não cobre → manter e vigiar", () => {
-  it("cintura a descer, braço a cair, força estável", () => {
-    expect(recommend(rows(84, 83.4, 35, 34.6, false), GOAL, TODAY).kind).toBe("watch");
-  });
-
-  it("cintura igual, braço a cair", () => {
-    expect(recommend(rows(84, 84, 35, 34.6), GOAL, TODAY).kind).toBe("watch");
-  });
-
-  it("cintura a subir entre 0,3 e 0,5 cm", () => {
-    expect(recommend(rows(84, 84.4, 35, 35), GOAL, TODAY).kind).toBe("watch");
-  });
-});
-
-describe("limites e dados em falta", () => {
-  it("−0,29 cm conta como igual (não é arredondado para −0,3)", () => {
-    expect(recommend(rows(84, 83.71, 35, 35), GOAL, TODAY).kind).toBe("cut");
-  });
-
-  it("+0,45 cm ainda não corta à gordura (não é arredondado para 0,5)", () => {
-    expect(recommend(rows(84, 84.45, 35, 35), GOAL, TODAY).kind).toBe("watch");
-  });
-
-  it("cintura igual sem medida dos braços → pede para medir os braços", () => {
-    expect(recommend(rows(84, 84, null, null), GOAL, TODAY).kind).toBe("measure-arms");
-  });
-
-  it("sem medições → dados insuficientes", () => {
-    expect(recommend([], GOAL, TODAY).kind).toBe("insufficient");
-  });
-
-  it("ajuste há menos de 14 dias → ainda é cedo e não está na altura", () => {
-    const r = recommend(rows(84, 84, 35, 35), "2026-11-01", TODAY);
-    expect(r.kind).toBe("insufficient");
+describe("altura do check-in", () => {
+  it("ajuste há 7 dias → faltam 14 dias", () => {
+    const r = recommend({ measurements: [], weights: [], lastGoalDate: "2026-12-13", today: TODAY });
     expect(r.due).toBe(false);
     expect(r.daysUntilDue).toBe(14);
-  });
-
-  it("21 dias depois do ajuste → está na altura do check-in", () => {
-    const r = recommend(rows(84, 84.6, 35, 35), "2026-10-18", TODAY);
-    expect(r.due).toBe(true);
-    expect(r.daysUntilDue).toBe(0);
-  });
-
-  it("medições no futuro não contam", () => {
-    const future: CheckInRow[] = [...rows(84, 83.4, 35, 35.4), { date: "2026-12-01", waistCm: 90 }];
-    expect(recommend(future, GOAL, TODAY).kind).toBe("perfect");
   });
 });
 
 describe("applyAdjustment", () => {
   const goal = { calories: 2200, proteinG: 160, carbsG: 250, fatG: 62 };
 
-  it("−150 kcal à gordura: 2200 → 2050 kcal, gordura 62 → 45 g, proteína igual", () => {
-    expect(applyAdjustment(goal, { kcal: -150, carbsG: 0, fatG: -17 })).toEqual({
-      calories: 2050,
-      proteinG: 160,
-      carbsG: 250,
-      fatG: 45,
-    });
+  it("condição A: 2200 → 2050 kcal, hidratos 250 → 212 g, gordura e proteína iguais", () => {
+    expect(applyAdjustment(goal, CUT_A)).toEqual({ calories: 2050, proteinG: 160, carbsG: 212, fatG: 62 });
   });
 
-  it("+125 kcal em hidratos", () => {
-    expect(applyAdjustment(goal, { kcal: 125, carbsG: 31, fatG: 0 })).toMatchObject({ calories: 2325, carbsG: 281 });
+  it("gordura nunca abaixo de 50 g", () => {
+    expect(applyAdjustment({ ...goal, fatG: 55 }, { kcal: -150, carbsG: 0, fatG: -17 }).fatG).toBe(50);
   });
 
-  it("nunca fica abaixo de zero", () => {
-    expect(applyAdjustment({ calories: 100, proteinG: 0, carbsG: 10, fatG: 5 }, { kcal: -150, carbsG: -31, fatG: -17 })).toEqual({
-      calories: 0,
-      proteinG: 0,
-      carbsG: 0,
-      fatG: 0,
-    });
+  it("hidratos nunca abaixo de 0", () => {
+    expect(applyAdjustment({ ...goal, carbsG: 20 }, CUT_A).carbsG).toBe(0);
   });
 });

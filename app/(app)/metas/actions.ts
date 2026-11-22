@@ -6,6 +6,8 @@ import { z } from "zod";
 import { getDb, schema } from "@/db";
 import { loadCheckInInputs } from "@/lib/data/goals";
 import { formatDate } from "@/lib/format";
+import { todayISO } from "@/lib/dates";
+import { weekStart } from "@/lib/metrics";
 import { applyAdjustment } from "@/lib/recomp-rules";
 import { requireSession } from "@/lib/session";
 
@@ -134,5 +136,41 @@ export async function applyRecommendation(): Promise<ApplyResult> {
   } catch (err) {
     console.error("[applyRecommendation]", err);
     return { ok: false, message: "Não foi possível aplicar. Tenta de novo." };
+  }
+}
+
+/* --------------------------------------------------------- semana atípica */
+
+const atypicalSchema = z.object({
+  atypical: z.boolean(),
+  reason: z.string().trim().max(120).nullable(),
+});
+
+/**
+ * Marca (ou desmarca) a semana atual como atípica: o assistente não sugere cortes
+ * nessa semana. Grava na tabela checkin_weeks (uma linha por semana).
+ */
+export async function setAtypicalWeek(atypical: boolean, reason: string | null): Promise<ApplyResult> {
+  await requireSession();
+  const parsed = atypicalSchema.safeParse({ atypical, reason });
+  if (!parsed.success) return { ok: false, message: "Dados inválidos." };
+  try {
+    const db = await getDb();
+    const week = weekStart(todayISO());
+    await db
+      .insert(schema.checkinWeeks)
+      .values({ weekStart: week, atypical: parsed.data.atypical, reason: parsed.data.reason })
+      .onConflictDoUpdate({
+        target: schema.checkinWeeks.weekStart,
+        set: { atypical: parsed.data.atypical, reason: parsed.data.reason, updatedAt: new Date() },
+      });
+    refresh();
+    return {
+      ok: true,
+      message: parsed.data.atypical ? "Semana marcada como atípica: sem cortes esta semana" : "Semana atípica desmarcada",
+    };
+  } catch (err) {
+    console.error("[setAtypicalWeek]", err);
+    return { ok: false, message: "Não foi possível guardar. A tabela nova ainda não existe nesta base de dados?" };
   }
 }

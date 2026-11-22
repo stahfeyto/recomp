@@ -19,20 +19,25 @@ function validDate(s: string): boolean {
 }
 
 /**
- * Lê o registo semanal de um FormData. Números aceitam vírgula ou ponto.
+ * Lê um registo de medidas de um FormData. Números aceitam vírgula ou ponto.
+ * Só devolve os campos que VÊM no formulário (`provided`): o que não vem não é
+ * tocado ao gravar (ex.: o peso antigo de um registo, que o formulário já não mostra).
  * Devolve os erros por campo (mensagens em PT) em vez de lançar.
  */
 export function parseMeasurementForm(
   fd: FormData,
-): { ok: true; data: MeasurementInput } | { ok: false; errors: FieldErrors } {
+): { ok: true; data: Partial<MeasurementInput> & { date: string }; provided: string[] } | { ok: false; errors: FieldErrors } {
   const errors: FieldErrors = {};
 
   const date = String(fd.get("date") ?? "").trim();
   if (!validDate(date)) errors.date = "Escolhe uma data válida.";
 
-  const values = {} as Record<MeasureKey, number | null>;
+  const values: Partial<Record<MeasureKey, number | null>> = {};
+  const provided: string[] = [];
   let filled = 0;
   for (const m of MEASURES) {
+    if (!fd.has(m.key)) continue;
+    provided.push(m.key);
     const raw = String(fd.get(m.key) ?? "").trim();
     if (raw === "") {
       values[m.key] = null;
@@ -49,21 +54,59 @@ export function parseMeasurementForm(
     }
   }
 
-  const strengthRaw = String(fd.get("strength") ?? "");
-  const strengthDropping = strengthRaw === "sim" ? true : strengthRaw === "nao" ? false : null;
-
-  const notesRaw = String(fd.get("notes") ?? "").trim();
-  if (notesRaw.length > 1000) errors.notes = "Máximo de 1000 caracteres.";
+  const extra: Partial<Pick<MeasurementInput, "strengthDropping" | "notes">> = {};
+  if (fd.has("strength")) {
+    provided.push("strengthDropping");
+    const strengthRaw = String(fd.get("strength") ?? "");
+    extra.strengthDropping = strengthRaw === "sim" ? true : strengthRaw === "nao" ? false : null;
+    if (extra.strengthDropping !== null) filled++;
+  }
+  if (fd.has("notes")) {
+    provided.push("notes");
+    const notesRaw = String(fd.get("notes") ?? "").trim();
+    if (notesRaw.length > 1000) errors.notes = "Máximo de 1000 caracteres.";
+    extra.notes = notesRaw || null;
+  }
 
   if (filled === 0 && Object.keys(errors).length === 0) {
     errors.form = "Preenche pelo menos uma medida.";
   }
 
   if (Object.keys(errors).length > 0) return { ok: false, errors };
-  return {
-    ok: true,
-    data: { date, ...values, strengthDropping, notes: notesRaw || null },
+  return { ok: true, data: { date, ...values, ...extra }, provided };
+}
+
+export type TodayInput = { date: string; weightKg: number | null; waistCm: number | null };
+
+/** Registo rápido do dia: peso e/ou cintura (pelo menos um). */
+export function parseTodayForm(
+  fd: FormData,
+): { ok: true; data: TodayInput } | { ok: false; errors: Partial<Record<"date" | "weightKg" | "waistCm" | "form", string>> } {
+  const errors: Partial<Record<"date" | "weightKg" | "waistCm" | "form", string>> = {};
+  const date = String(fd.get("date") ?? "").trim();
+  if (!validDate(date)) errors.date = "Escolhe uma data válida.";
+
+  const read = (key: "weightKg" | "waistCm", min: number, max: number, unit: string, eg: string) => {
+    const raw = String(fd.get(key) ?? "").trim();
+    if (raw === "") return null;
+    const n = parseDecimal(raw);
+    if (n === null) {
+      errors[key] = `Escreve um número, por exemplo ${eg}.`;
+      return null;
+    }
+    if (n < min || n > max) {
+      errors[key] = `Entre ${min} e ${max} ${unit}.`;
+      return null;
+    }
+    return Math.round(n * 100) / 100;
   };
+  const weightKg = read("weightKg", 30, 250, "kg", "65,4");
+  const waistCm = read("waistCm", 40, 200, "cm", "83,5");
+  if (weightKg === null && waistCm === null && Object.keys(errors).length === 0) {
+    errors.form = "Escreve o peso, a cintura ou os dois.";
+  }
+  if (Object.keys(errors).length > 0) return { ok: false, errors };
+  return { ok: true, data: { date, weightKg, waistCm } };
 }
 
 const measureNumber = z.number().finite().nullable();

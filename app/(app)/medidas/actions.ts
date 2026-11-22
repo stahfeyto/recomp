@@ -11,6 +11,7 @@ import { requireSession } from "@/lib/session";
 import {
   dailyWeightSchema,
   parseMeasurementForm,
+  parseTodayForm,
   restoreMeasurementSchema,
   type FieldErrors,
 } from "@/lib/validation/measurement";
@@ -101,8 +102,8 @@ export async function saveMeasurement(
       if (existing) {
         before = existing;
         const patch: Partial<typeof data> = {};
-        for (const key of MEASURE_COLUMNS) if (data[key] !== null) patch[key] = data[key];
-        if (data.strengthDropping !== null) patch.strengthDropping = data.strengthDropping;
+        for (const key of MEASURE_COLUMNS) if (data[key] != null) patch[key] = data[key];
+        if (data.strengthDropping != null) patch.strengthDropping = data.strengthDropping;
         if (data.notes) patch.notes = existing.notes ? `${existing.notes}\n${data.notes}` : data.notes;
         await db.update(schema.measurements).set(patch).where(eq(schema.measurements.id, existing.id));
         savedId = existing.id;
@@ -250,4 +251,49 @@ export async function restoreDailyWeight(row: DailyWeightRow): Promise<boolean> 
     .returning({ id: schema.dailyWeights.id });
   refresh();
   return inserted.length > 0;
+}
+
+/* ------------------------------------------------------ registo rápido do dia */
+
+export type SaveTodayState = {
+  status: "idle" | "ok" | "error";
+  nonce: number;
+  errors?: Partial<Record<"date" | "weightKg" | "waistCm" | "form", string>>;
+  message?: string;
+};
+
+/**
+ * "Registar hoje": peso e/ou cintura do dia.
+ * - Peso → pesagem diária desse dia (substitui a do mesmo dia, se houver).
+ * - Cintura → registo de medidas desse dia: se já existir, só muda a cintura
+ *   (os outros campos ficam); senão cria um registo só com a cintura.
+ */
+export async function saveToday(prev: SaveTodayState, formData: FormData): Promise<SaveTodayState> {
+  await requireSession();
+  const nonce = prev.nonce + 1;
+  const parsed = parseTodayForm(formData);
+  if (!parsed.ok) return { status: "error", nonce, errors: parsed.errors };
+  const { date, weightKg, waistCm } = parsed.data;
+
+  try {
+    const db = await getDb();
+    if (weightKg !== null) {
+      await db
+        .insert(schema.dailyWeights)
+        .values({ date, weightKg })
+        .onConflictDoUpdate({ target: schema.dailyWeights.date, set: { weightKg } });
+    }
+    if (waistCm !== null) {
+      await db
+        .insert(schema.measurements)
+        .values({ date, waistCm })
+        .onConflictDoUpdate({ target: schema.measurements.date, set: { waistCm } });
+    }
+    refresh();
+    const parts = [weightKg !== null && "peso", waistCm !== null && "cintura"].filter(Boolean).join(" e ");
+    return { status: "ok", nonce, message: `${parts.charAt(0).toUpperCase()}${parts.slice(1)} de ${formatDate(date)} guardado${weightKg !== null && waistCm !== null ? "s" : ""}` };
+  } catch (err) {
+    console.error("[saveToday]", err);
+    return { status: "error", nonce, errors: { form: "Não foi possível guardar. Tenta de novo." } };
+  }
 }

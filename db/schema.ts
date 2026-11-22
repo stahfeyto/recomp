@@ -151,6 +151,24 @@ export const loginAttempts = pgTable("login_attempts", {
     .defaultNow(),
 });
 
+/**
+ * Marca por semana para o assistente de check-in ("semana atípica": falhei treinos /
+ * comi fora do plano). Tabela nova: acrescentada sem alterar nenhuma das existentes.
+ */
+export const checkinWeeks = pgTable(
+  "checkin_weeks",
+  {
+    id: serial("id").primaryKey(),
+    /** Segunda-feira da semana. */
+    weekStart: date("week_start", { mode: "string" }).notNull(),
+    atypical: boolean("atypical").notNull().default(false),
+    reason: text("reason"),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [uniqueIndex("checkin_weeks_week_uq").on(t.weekStart)],
+);
+
 export type Measurement = typeof measurements.$inferSelect;
 export type NewMeasurement = typeof measurements.$inferInsert;
 export type DailyWeight = typeof dailyWeights.$inferSelect;

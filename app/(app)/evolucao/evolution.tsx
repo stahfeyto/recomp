@@ -1,27 +1,28 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { MeasureChart, RatioChart, WaistArmChart, WeightChart } from "@/components/charts/lazy";
+import type { DailyAverageRow } from "@/components/charts/daily-average-chart";
+import { DailyAverageChart, MeasureChart, RatioChart, WaistArmChart } from "@/components/charts/lazy";
 import type { MeasurePoint } from "@/components/charts/measure-chart";
 import type { RatioRow } from "@/components/charts/ratio-chart";
 import { CHART } from "@/components/charts/theme";
 import type { GoalMark, WaistArmRow } from "@/components/charts/waist-arm-chart";
-import type { WeightRow } from "@/components/charts/weight-chart";
 import { Card } from "@/components/ui/card";
-import {
-  SHOULDER_WAIST_IDEAL,
-  armAverage,
-  isoToTime,
-  lastKnownValues,
-  movingAverage7,
-  periodStart,
-  ratio,
-  round1,
-  shiftISODate,
-} from "@/lib/calculations";
+import { SHOULDER_WAIST_IDEAL, isoToTime, periodStart } from "@/lib/calculations";
 import type { EvolutionData } from "@/lib/data/evolution";
 import { formatDate, formatDayMonth, formatSigned } from "@/lib/format";
 import { MEASURES } from "@/lib/measures";
+import {
+  armAverage,
+  lastAt,
+  movingAverage,
+  ratio,
+  round1,
+  seriesOf,
+  weightSeries,
+  windowStat,
+  type Point,
+} from "@/lib/metrics";
 import { formatDecimal } from "@/lib/number";
 import { Comparator } from "./comparator";
 
@@ -34,89 +35,87 @@ const PERIODS = [
 
 type PeriodId = (typeof PERIODS)[number]["id"];
 
+/** Medidas com gráfico próprio (peso e cintura) ficam fora dos mini-gráficos. */
+const DAILY_KEYS = new Set(["weightKg", "waistCm"]);
+
+/** Pontos + média de 7 dias, calculada sobre a série inteira (inclui dias antes do período). */
+function dailyRows(points: Point[], inRange: (d: string) => boolean): DailyAverageRow[] {
+  return movingAverage(points)
+    .map((ma, i) => ({ t: isoToTime(ma.date), value: points[i].value, avg: ma.value, count: ma.count, date: ma.date }))
+    .filter((r) => inRange(r.date))
+    .map(({ date: _d, ...r }) => r);
+}
+
 export function Evolution({ data }: { data: EvolutionData }) {
   const [period, setPeriod] = useState<PeriodId>("3m");
   const days = PERIODS.find((p) => p.id === period)!.days;
 
   const view = useMemo(() => {
     const from = periodStart(data.today, days);
-    const inRange = (d: string) => !from || d >= from;
-    const ms = data.measurements.filter((m) => inRange(m.date));
-    const allDates = [
-      ...ms.map((m) => m.date),
-      ...data.weights.filter((w) => inRange(w.date)).map((w) => w.date),
-    ].sort();
+    const inRange = (d: string) => (!from || d >= from) && d <= data.today;
+
+    const waistPts = seriesOf(data.measurements, (r) => r.waistCm);
+    const weightPts = weightSeries(data.weights, data.measurements);
+    const armPts = seriesOf(data.measurements, armAverage);
+
+    const allDates = [...waistPts, ...weightPts, ...armPts].map((p) => p.date).filter(inRange).sort();
     const start = from ?? allDates[0] ?? data.today;
     const domain: [number, number] = [isoToTime(start), isoToTime(data.today)];
 
-    // Cintura vs braço: variação desde o primeiro valor do período
-    const waistBase = ms.find((m) => typeof m.waistCm === "number")?.waistCm ?? null;
-    const armBase = ms.map(armAverage).find((v) => v !== null) ?? null;
-    // Último valor conhecido de cada série, para o tooltip mostrar sempre as duas.
+    const waistRows = dailyRows(waistPts, inRange);
+    const weightRows = dailyRows(weightPts, inRange);
+
+    // Cintura vs braço: a cintura em média de 7 dias, o braço nos registos semanais;
+    // variação desde o primeiro valor do período.
+    const waistMA = new Map(movingAverage(waistPts).map((p) => [p.date, p.value]));
+    const armByDate = new Map(armPts.map((p) => [p.date, p.value]));
+    const waArDates = [...new Set([...waistPts, ...armPts].map((p) => p.date))].filter(inRange).sort();
+    const waistBase = waArDates.map((d) => waistMA.get(d)).find((v) => v !== undefined) ?? null;
+    const armBase = waArDates.map((d) => armByDate.get(d)).find((v) => v !== undefined) ?? null;
     const waistArm: WaistArmRow[] = [];
     {
       let lastWaist: WaistArmRow["waistLast"] = null;
       let lastArm: WaistArmRow["armLast"] = null;
-      for (const m of ms) {
-        const arm = armAverage(m);
-        const waistD = m.waistCm !== null && waistBase !== null ? round1(m.waistCm - waistBase) : null;
-        const armD = arm !== null && armBase !== null ? round1(arm - armBase) : null;
-        if (waistD !== null || armD !== null) {
-          waistArm.push({
-            t: isoToTime(m.date),
-            waist: m.waistCm,
-            arm,
-            waistD,
-            armD,
-            waistLast: lastWaist,
-            armLast: lastArm,
-          });
-        }
-        if (waistD !== null) lastWaist = { d: waistD, value: m.waistCm!, date: m.date };
-        if (armD !== null) lastArm = { d: armD, value: arm!, date: m.date };
+      for (const date of waArDates) {
+        const w = waistMA.get(date) ?? null;
+        const a = armByDate.get(date) ?? null;
+        const waistD = w !== null && waistBase !== null ? round1(w - waistBase) : null;
+        const armD = a !== null && armBase !== null ? round1(a - armBase) : null;
+        waistArm.push({ t: isoToTime(date), waist: w, arm: a, waistD, armD, waistLast: lastWaist, armLast: lastArm });
+        if (waistD !== null) lastWaist = { d: waistD, value: w!, date };
+        if (armD !== null) lastArm = { d: armD, value: a!, date };
       }
     }
 
-    // Peso
-    const dailyInRange = data.weights.filter((w) => inRange(w.date));
-    const hasDaily = dailyInRange.length > 0;
-    const weight: WeightRow[] = hasDaily
-      ? (() => {
-          // A média usa também pesagens logo antes do período.
-          const ma = movingAverage7(data.weights.filter((w) => w.date >= shiftISODate(start, -6)));
-          const maByDate = new Map(ma.map((x) => [x.date, x.average]));
-          return dailyInRange.map((w) => ({ t: isoToTime(w.date), weight: w.weightKg, avg: maByDate.get(w.date) ?? null }));
-        })()
-      : ms
-          .filter((m) => typeof m.weightKg === "number")
-          .map((m) => ({ t: isoToTime(m.date), weight: null, avg: m.weightKg }));
-
-    // Proporção ombros/cintura com os últimos valores conhecidos a cada data
-    const ratios: RatioRow[] = ms
-      .map((m) => {
-        const known = lastKnownValues(data.measurements, { beforeDate: shiftISODate(m.date, 1) });
-        const s = known.shouldersCm?.value;
-        const w = known.waistCm?.value;
-        return s && w ? { t: isoToTime(m.date), ratio: ratio(s, w) } : null;
+    // Ombros/cintura: ombros (último registo) sobre a média de 7 dias da cintura.
+    const shoulderPts = seriesOf(data.measurements, (r) => r.shouldersCm);
+    const ratios: RatioRow[] = waArDates
+      .map((date) => {
+        const s = lastAt(shoulderPts, date);
+        const w = windowStat(waistPts, date);
+        return s && w ? { t: isoToTime(date), ratio: ratio(s.value, w.value) } : null;
       })
       .filter((r): r is RatioRow => r !== null);
 
-    // Uma série por medida
-    const perMeasure = MEASURES.map((def) => ({
-      def,
-      points: ms
-        .filter((m) => typeof m[def.key] === "number")
-        .map((m) => ({ t: isoToTime(m.date), value: m[def.key] as number })) as MeasurePoint[],
-    })).filter((s) => s.points.length > 0);
+    // Mini-gráficos das medidas semanais
+    const perMeasure = MEASURES.filter((def) => !DAILY_KEYS.has(def.key))
+      .map((def) => ({
+        def,
+        points: seriesOf(data.measurements, (r) => r[def.key])
+          .filter((p) => inRange(p.date))
+          .map((p) => ({ t: isoToTime(p.date), value: p.value })) as MeasurePoint[],
+      }))
+      .filter((s) => s.points.length > 0);
 
     const goals: GoalMark[] = data.goals
-      .filter((g) => inRange(g.date) && g.date <= data.today)
+      .filter((g) => inRange(g.date))
       .map((g) => ({ t: isoToTime(g.date), label: g.label }));
 
-    return { domain, waistArm, weight, hasDaily, ratios, perMeasure, goals, start };
+    return { domain, waistArm, waistRows, weightRows, ratios, perMeasure, goals, start, hasAny: allDates.length > 0 };
   }, [data, days]);
 
   const lastWA = view.waistArm.at(-1);
+  const canWiden = view.hasAny && period !== "all";
 
   return (
     <div className="grid gap-6">
@@ -141,13 +140,13 @@ export function Evolution({ data }: { data: EvolutionData }) {
             <h2 className="text-xl">Cintura vs braço</h2>
             <p className="text-sm text-ice-300">
               Variação em cm desde{" "}
-              {formatDate(view.waistArm[0] ? new Date(view.waistArm[0].t).toISOString().slice(0, 10) : view.start)}. A
-              cintura decide: deve descer enquanto o braço sobe ou fica.
+              {formatDate(view.waistArm[0] ? new Date(view.waistArm[0].t).toISOString().slice(0, 10) : view.start)}. Cintura em
+              média de 7 dias, braço nos registos semanais. A cintura decide.
             </p>
           </div>
           <Legend
             items={[
-              { label: "Cintura", color: CHART.cobalt },
+              { label: "Cintura (média 7 dias)", color: CHART.cobalt },
               { label: "Braço (média D/E)", color: CHART.lime },
             ]}
           />
@@ -167,9 +166,9 @@ export function Evolution({ data }: { data: EvolutionData }) {
                 <thead>
                   <tr>
                     <th scope="col">Data</th>
-                    <th scope="col">Cintura</th>
+                    <th scope="col">Cintura (7 dias)</th>
                     <th scope="col">Variação</th>
-                    <th scope="col">Braço (média)</th>
+                    <th scope="col">Braço</th>
                     <th scope="col">Variação</th>
                   </tr>
                 </thead>
@@ -188,51 +187,82 @@ export function Evolution({ data }: { data: EvolutionData }) {
             </details>
           </>
         ) : (
-          <EmptyChart canWiden={data.measurements.length >= 2 && period !== "all"} />
+          <EmptyChart canWiden={canWiden} />
         )}
       </Card>
 
       <div className="evo-pair">
+        {/* Cintura diária */}
+        <Card className="evo-card" spotlight={false}>
+          <header className="evo-card__head">
+            <div className="grid gap-1">
+              <h2 className="text-xl">Cintura</h2>
+              <p className="text-sm text-ice-300">Medições diárias e média de 7 dias. Os registos semanais antigos contam como medição única.</p>
+            </div>
+            <Legend
+              items={[
+                { label: "Média 7 dias", color: CHART.cobalt },
+                { label: "Medição", color: CHART.dot, shape: "dot" },
+              ]}
+            />
+          </header>
+          {view.waistRows.length >= 2 ? (
+            <DailyAverageChart
+              rows={view.waistRows}
+              goals={view.goals}
+              domain={view.domain}
+              unit="cm"
+              pointLabel="Medição"
+              label="Cintura: medições diárias e média de 7 dias."
+            />
+          ) : (
+            <EmptyChart canWiden={canWiden} />
+          )}
+        </Card>
+
         {/* Peso */}
         <Card className="evo-card" spotlight={false}>
           <header className="evo-card__head">
             <div className="grid gap-1">
               <h2 className="text-xl">Peso</h2>
-              <p className="text-sm text-ice-300">
-                {view.hasDaily ? "Pesagens diárias e média móvel de 7 dias." : "Peso das medições semanais."}
-              </p>
+              <p className="text-sm text-ice-300">Pesagens diárias e média de 7 dias.</p>
             </div>
-            {view.hasDaily && (
-              <Legend
-                items={[
-                  { label: "Média 7 dias", color: CHART.cobalt },
-                  { label: "Pesagem", color: CHART.dot, shape: "dot" },
-                ]}
-              />
-            )}
+            <Legend
+              items={[
+                { label: "Média 7 dias", color: CHART.cobalt },
+                { label: "Pesagem", color: CHART.dot, shape: "dot" },
+              ]}
+            />
           </header>
-          {view.weight.length >= 2 ? (
-            <WeightChart rows={view.weight} goals={view.goals} domain={view.domain} hasDaily={view.hasDaily} />
+          {view.weightRows.length >= 2 ? (
+            <DailyAverageChart
+              rows={view.weightRows}
+              goals={view.goals}
+              domain={view.domain}
+              unit="kg"
+              pointLabel="Pesagem"
+              label="Peso: pesagens diárias e média de 7 dias."
+            />
           ) : (
-            <EmptyChart canWiden={data.measurements.length >= 2 && period !== "all"} />
-          )}
-        </Card>
-
-        {/* Proporção */}
-        <Card className="evo-card" spotlight={false}>
-          <header className="evo-card__head">
-            <div className="grid gap-1">
-              <h2 className="text-xl">Ombros / cintura</h2>
-              <p className="text-sm text-ice-300">Sobe quando a cintura desce ou os ombros crescem.</p>
-            </div>
-          </header>
-          {view.ratios.length >= 2 ? (
-            <RatioChart rows={view.ratios} domain={view.domain} ideal={SHOULDER_WAIST_IDEAL} />
-          ) : (
-            <EmptyChart canWiden={data.measurements.length >= 2 && period !== "all"} />
+            <EmptyChart canWiden={canWiden} />
           )}
         </Card>
       </div>
+
+      {/* Proporção */}
+      <Card className="evo-card" spotlight={false}>
+        <header className="evo-card__head">
+          <div className="grid gap-1">
+            <h2 className="text-xl">Ombros / cintura</h2>
+            <p className="text-sm text-ice-300">Ombros (último registo) a dividir pela média de 7 dias da cintura.</p>
+          </div>
+        </header>
+        {view.ratios.length >= 2 ? (
+          <RatioChart rows={view.ratios} domain={view.domain} ideal={SHOULDER_WAIST_IDEAL} />
+        ) : (
+          <EmptyChart canWiden={canWiden} />
+        )}
+      </Card>
 
       {view.goals.length > 0 && (
         <p className="text-sm text-ice-300">
@@ -246,10 +276,10 @@ export function Evolution({ data }: { data: EvolutionData }) {
         </p>
       )}
 
-      {/* Cada medida */}
+      {/* Medidas semanais */}
       <section aria-labelledby="medidas-h" className="grid gap-4">
         <h2 id="medidas-h" className="text-xl">
-          Cada medida
+          Medidas semanais
         </h2>
         <div className="evo-grid">
           {view.perMeasure.map(({ def, points }) => {
@@ -260,10 +290,10 @@ export function Evolution({ data }: { data: EvolutionData }) {
                 <div className="flex items-baseline justify-between gap-3">
                   <h3 className="text-base">{def.label.replace(/ \(.*\)$/, "")}</h3>
                   <p className="num text-sm">
-                    <span className="font-semibold">{formatDecimal(last.value)} {def.unit}</span>
-                    {points.length > 1 && (
-                      <span className="text-ice-300"> · {formatSigned(last.value - first.value)}</span>
-                    )}
+                    <span className="font-semibold">
+                      {formatDecimal(last.value)} {def.unit}
+                    </span>
+                    {points.length > 1 && <span className="text-ice-300"> · {formatSigned(last.value - first.value)}</span>}
                   </p>
                 </div>
                 {points.length >= 2 ? (
@@ -277,7 +307,7 @@ export function Evolution({ data }: { data: EvolutionData }) {
         </div>
       </section>
 
-      <Comparator measurements={data.measurements} heightCm={data.heightCm} />
+      <Comparator measurements={data.measurements} weights={data.weights} heightCm={data.heightCm} today={data.today} />
     </div>
   );
 }
@@ -302,9 +332,7 @@ function Legend({ items }: { items: { label: string; color: string; shape?: "lin
 function EmptyChart({ canWiden }: { canWiden: boolean }) {
   return (
     <p className="grid min-h-40 place-items-center text-center text-sm text-ice-300">
-      {canWiden
-        ? "Precisa de pelo menos dois registos neste período. Experimenta “Tudo”."
-        : "O gráfico aparece a partir do segundo registo."}
+      {canWiden ? "Precisa de pelo menos dois registos neste período. Experimenta “Tudo”." : "O gráfico aparece a partir do segundo registo."}
     </p>
   );
 }

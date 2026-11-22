@@ -1,35 +1,35 @@
 import "server-only";
 import { asc, desc, eq, gte } from "drizzle-orm";
 import { getDb, schema } from "@/db";
+import { dueMeasures, greeting, nextCheckIn } from "@/lib/calculations";
+import { lisbonHour, todayISO, weekdayMondayFirst } from "@/lib/dates";
 import {
   armAverage,
-  dueMeasures,
-  greeting,
-  nextCheckIn,
+  averagedSummary,
+  movingAverage,
   ratio,
-  seriesSummary,
+  seriesOf,
   shiftISODate,
-  weightWeeks,
+  slowSummary,
+  weightSeries,
   type Point,
-} from "@/lib/calculations";
-import { lisbonHour, todayISO, weekdayMondayFirst } from "@/lib/dates";
+} from "@/lib/metrics";
 import { requireSession } from "@/lib/session";
 
-/** Tudo o que o Painel precisa, numa ida à BD (consultas em paralelo). */
+/** Tudo o que o Painel precisa; os cálculos vêm todos de lib/metrics.ts. */
 export async function getDashboardData() {
   await requireSession();
   const db = await getDb();
   const today = todayISO();
   const weekday = weekdayMondayFirst();
-  const since = shiftISODate(today, -70);
 
-  const [profileRows, measurements, weights, goals, days] = await Promise.all([
+  const [profileRows, measurements, dailyWeights, goals, days] = await Promise.all([
     db.select().from(schema.profile).limit(1),
     db.select().from(schema.measurements).orderBy(asc(schema.measurements.date)),
     db
       .select({ date: schema.dailyWeights.date, weightKg: schema.dailyWeights.weightKg })
       .from(schema.dailyWeights)
-      .where(gte(schema.dailyWeights.date, since))
+      .where(gte(schema.dailyWeights.date, shiftISODate(today, -400)))
       .orderBy(asc(schema.dailyWeights.date)),
     db.select().from(schema.nutritionGoals).orderBy(desc(schema.nutritionGoals.effectiveFrom)),
     db.select().from(schema.trainingDays).where(eq(schema.trainingDays.weekday, weekday)).limit(1),
@@ -47,51 +47,23 @@ export async function getDashboardData() {
   const profile = profileRows[0] ?? null;
   const activeGoal = goals.find((g) => g.effectiveFrom <= today) ?? null;
 
-  // KPIs
-  const waist = seriesSummary(measurements, (r) => r.waistCm);
-  const chest = seriesSummary(measurements, (r) => r.chestCm);
-  const shoulders = seriesSummary(measurements, (r) => r.shouldersCm);
-  const arm = seriesSummary(measurements, armAverage);
-  const weightMeasured = seriesSummary(measurements, (r) => r.weightKg);
-  const weeks = weightWeeks(weights, today);
+  const waistPts = seriesOf(measurements, (r) => r.waistCm);
+  const weightPts = weightSeries(dailyWeights, measurements);
+  const waist = averagedSummary(waistPts, today, "cm");
+  const weight = averagedSummary(weightPts, today, "kg");
+  const arm = slowSummary(seriesOf(measurements, armAverage), today);
+  const chest = slowSummary(seriesOf(measurements, (r) => r.chestCm), today);
+  const shoulders = slowSummary(seriesOf(measurements, (r) => r.shouldersCm), today);
   const lastArms = [...measurements]
     .reverse()
     .find((r) => typeof r.armRightCm === "number" && typeof r.armLeftCm === "number");
 
-  // Peso: média dos últimos 7 dias se houver pesagens; senão a última medição.
-  const weight = weeks.current
-    ? {
-        source: "media" as const,
-        current: weeks.current.average,
-        count: weeks.current.count,
-        previous: weeks.previous?.average ?? weightMeasured?.previous?.value ?? null,
-        first: weightMeasured?.first.value ?? null,
-      }
-    : weightMeasured
-      ? {
-          source: "medicao" as const,
-          current: weightMeasured.current.value,
-          count: 0,
-          previous: weightMeasured.previous?.value ?? null,
-          // Com um só registo, "desde o início" seria sempre 0.
-          first: weightMeasured.first.date !== weightMeasured.current.date ? weightMeasured.first.value : null,
-        }
-      : null;
-
-  // Sparklines das últimas 8 semanas
+  // Mini-gráficos das últimas 8 semanas: a linha da média de 7 dias.
   const from56 = shiftISODate(today, -56);
-  const waistSpark: Point[] = measurements
-    .filter((r) => r.date >= from56 && typeof r.waistCm === "number")
-    .map((r) => ({ date: r.date, value: r.waistCm! }));
-  const weightSpark: Point[] = (
-    weights.length >= 2
-      ? weights.filter((w) => w.date >= from56).map((w) => ({ date: w.date, value: w.weightKg }))
-      : measurements
-          .filter((r) => r.date >= from56 && typeof r.weightKg === "number")
-          .map((r) => ({ date: r.date, value: r.weightKg! }))
-  );
+  const spark = (pts: Point[]) => movingAverage(pts).filter((p) => p.date >= from56 && p.date <= today);
 
   const heightCm = profile?.heightCm ?? null;
+  const waistNow = waist?.current.value ?? null;
 
   return {
     today,
@@ -99,15 +71,14 @@ export async function getDashboardData() {
     greeting: greeting(lisbonHour()),
     name: profile?.displayName ?? "Helder",
     heightCm,
-    weight,
     waist,
+    weight,
+    arm,
     chest,
     shoulders,
-    arm,
     armSides: lastArms ? { right: lastArms.armRightCm!, left: lastArms.armLeftCm!, date: lastArms.date } : null,
-    shoulderWaist:
-      shoulders && waist ? ratio(shoulders.current.value, waist.current.value) : null,
-    waistHeight: waist && heightCm ? ratio(waist.current.value, heightCm) : null,
+    shoulderWaist: shoulders && waistNow ? ratio(shoulders.latest.value, waistNow) : null,
+    waistHeight: waistNow && heightCm ? ratio(waistNow, heightCm) : null,
     activeGoal: activeGoal
       ? {
           label: activeGoal.label,
@@ -122,7 +93,10 @@ export async function getDashboardData() {
       goals.map((g) => g.effectiveFrom),
       today,
     ),
-    due: dueMeasures(measurements, today),
+    due: {
+      ...dueMeasures(measurements, today),
+      weightToday: dailyWeights.some((w) => w.date === today),
+    },
     training: day
       ? {
           title: day.title,
@@ -137,8 +111,8 @@ export async function getDashboardData() {
           })),
         }
       : null,
-    waistSpark,
-    weightSpark,
+    waistSpark: spark(waistPts),
+    weightSpark: spark(weightPts),
   };
 }
 

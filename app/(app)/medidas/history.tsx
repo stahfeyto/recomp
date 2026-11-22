@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/toast";
-import { deltaTone, lastKnownValues } from "@/lib/calculations";
+import { lastKnownValues } from "@/lib/calculations";
+import { comparePoints, toneOf } from "@/lib/metrics";
 import type { MeasurementRow } from "@/lib/data/measurements";
 import { formatDate, formatSigned } from "@/lib/format";
 import { MEASURES } from "@/lib/measures";
@@ -95,16 +96,17 @@ export function MeasurementHistory({
                   {shown.map((m) => {
                     const value = row[m.key] as number;
                     const prev = previous[m.key];
-                    const delta = prev ? value - prev.value : null;
+                    // Valor isolado vs registo anterior: < 0,5 cm conta como igual (lib/metrics).
+                    const c = prev ? comparePoints({ date: row.date, value }, prev) : null;
                     return (
                       <div key={m.key} className="history__cell">
-                        <dt className="text-xs text-ice-300">{m.short}</dt>
+                        <dt className="text-sm text-ice-300">{m.short}</dt>
                         <dd className="num text-lg font-medium">
                           {formatDecimal(value)} <span className="text-sm text-ice-300">{m.unit}</span>
                         </dd>
-                        {delta !== null && (
+                        {c && (
                           <dd>
-                            <DeltaBadge tone={deltaTone(m.key, delta)} delta={delta} label={`${formatSigned(delta)} ${m.unit}`} />
+                            <DeltaBadge tone={toneOf(m.key, c.trend)} delta={c.delta} label={`${formatSigned(c.delta)} ${m.unit}`} />
                           </dd>
                         )}
                       </div>

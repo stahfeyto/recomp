@@ -1,6 +1,7 @@
 import { ArrowRight, CalendarClock, Dumbbell, ListChecks } from "lucide-react";
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { Scene3D } from "@/components/3d/scene-3d";
 import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
@@ -8,21 +9,61 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { SHOULDER_WAIST_IDEAL, WAIST_HEIGHT_HEALTHY } from "@/lib/calculations";
 import { getDashboardData, type DashboardData } from "@/lib/data/dashboard";
 import { formatDateWeekday, formatDayMonth } from "@/lib/format";
+import {
+  RELIABILITY_LABEL,
+  TREND_LABEL,
+  toneOf,
+  type AveragedSummary,
+  type SlowSummary,
+} from "@/lib/metrics";
+import type { MeasureKey } from "@/lib/measures";
 import { formatDecimal } from "@/lib/number";
-import { TRAINING_TYPES, WEEKDAYS } from "@/lib/training";
-import { KpiCard } from "./_painel/kpi-card";
+import { WEEKDAYS } from "@/lib/training";
+import { KpiCard, type KpiDelta } from "./_painel/kpi-card";
 import { MacroRings } from "./_painel/macro-rings";
 import { RatioMeter } from "./_painel/ratio-meter";
 import { Sparkline } from "./_painel/sparkline";
-import "./_painel/painel.css";
 import { TypeBadge } from "./treino/training-types";
-import { Scene3D } from "@/components/3d/scene-3d";
+import "./_painel/painel.css";
 
 export const metadata: Metadata = { title: "Painel · RECOMP" };
 
-/** O valor do início só interessa se for de um registo diferente do atual. */
-function sinceStart(s: { current: { date: string }; first: { value: number; date: string } } | null) {
-  return s && s.first.date !== s.current.date ? s.first.value : null;
+/** Variações de uma média de 7 dias (cintura, peso), já com a cor certa. */
+function averagedDeltas(s: AveragedSummary | null, key: MeasureKey, unit: string): KpiDelta[] {
+  if (!s) return [];
+  const out: KpiDelta[] = [];
+  if (s.previous) out.push({ label: "vs semana anterior", delta: s.previous.delta, tone: toneOf(key, s.previous.trend), unit });
+  if (s.sinceStart) out.push({ label: "desde o início", delta: s.sinceStart.delta, tone: toneOf(key, s.sinceStart.trend), unit });
+  return out;
+}
+
+/** Variação de uma medida semanal face ao último registo. */
+function slowDeltas(s: SlowSummary | null, key: MeasureKey): KpiDelta[] {
+  if (!s?.vsLast) return [];
+  return [
+    {
+      label: `vs ${formatDayMonth(s.vsLast.previous.date)}`,
+      delta: s.vsLast.delta,
+      tone: toneOf(key, s.vsLast.trend),
+      unit: "cm",
+    },
+  ];
+}
+
+/** Conclusão a 4 semanas (ou o aviso de que ainda não há 4 semanas). */
+function slowNote(s: SlowSummary | null) {
+  if (!s) return undefined;
+  if (!s.fourWeeks) return "Conclusão a 4 semanas: ainda sem dados suficientes.";
+  return `4 semanas: ${TREND_LABEL[s.fourWeeks.trend]} (${s.fourWeeks.delta > 0 ? "+" : s.fourWeeks.delta < 0 ? "−" : ""}${formatDecimal(Math.abs(s.fourWeeks.delta))} cm)`;
+}
+
+function badgeOf(s: AveragedSummary | null) {
+  if (!s) return {};
+  const r = s.current.reliability;
+  return {
+    badge: r === "fiavel" ? `média de 7 dias · ${s.current.count}` : RELIABILITY_LABEL[r],
+    badgeTone: r === "fiavel" ? ("neutral" as const) : ("warn" as const),
+  };
 }
 
 export default function PainelPage() {
@@ -39,54 +80,53 @@ async function Painel() {
 
   return (
     <div className="stagger">
-      <PageHeader
-        eyebrow={formatDateWeekday(d.today)}
-        title={`${d.greeting}, ${d.name}`}
-        actions={<Scene3D variant="orb" />}
-      />
+      <PageHeader eyebrow={formatDateWeekday(d.today)} title={`${d.greeting}, ${d.name}`} actions={<Scene3D variant="orb" />} />
 
       <div className="bento">
-        {/* Cintura: a medida que decide */}
+        {/* Topo: cintura e peso (médias de 7 dias) e o próximo check-in */}
         <KpiCard
           className="bento__waist"
           size="lg"
           label="Cintura"
           value={d.waist?.current.value ?? null}
           unit="cm"
-          toneKey="waistCm"
-          previous={d.waist?.previous?.value}
-          first={sinceStart(d.waist)}
+          {...badgeOf(d.waist)}
+          deltas={averagedDeltas(d.waist, "waistCm", "cm")}
+          note={
+            d.waist && d.waist.current.reliability !== "fiavel"
+              ? "Mede a cintura todos os dias: com 4 medições em 7 dias a média fica fiável."
+              : undefined
+          }
         >
-          <Sparkline id="waist" label="Cintura nas últimas 8 semanas" unit="cm" points={d.waistSpark} />
+          <Sparkline id="waist" label="Média de 7 dias da cintura nas últimas 8 semanas" unit="cm" points={d.waistSpark} />
         </KpiCard>
 
         <KpiCard
           className="bento__weight"
           size="lg"
-          label={d.weight?.source === "media" ? "Peso · média de 7 dias" : "Peso"}
-          value={d.weight?.current ?? null}
+          label="Peso"
+          value={d.weight?.current.value ?? null}
           unit="kg"
-          toneKey="weightKg"
-          previous={d.weight?.previous}
-          first={d.weight?.first}
-          note={
-            d.weight?.source === "media"
-              ? `${d.weight.count} ${d.weight.count === 1 ? "pesagem" : "pesagens"} nesta semana`
-              : "Pesa-te todas as manhãs para teres a média semanal."
-          }
+          {...badgeOf(d.weight)}
+          deltas={averagedDeltas(d.weight, "weightKg", "kg")}
         >
-          <Sparkline id="weight" label="Peso nas últimas 8 semanas" unit="kg" points={d.weightSpark} />
+          <Sparkline id="weight" label="Média de 7 dias do peso nas últimas 8 semanas" unit="kg" points={d.weightSpark} />
         </KpiCard>
+
+        <CheckInCard d={d} />
+
+        {/* Resto */}
+        <TodayTraining d={d} />
 
         <Card className="bento__macros grid content-start gap-4 p-6">
           <div className="grid gap-1">
             <p className="eyebrow">Metas · {d.activeGoal?.label ?? "sem meta"}</p>
             {d.activeGoal && (
-              <span className="text-xs text-ice-300">em vigor desde {formatDayMonth(d.activeGoal.effectiveFrom)}</span>
+              <span className="text-sm text-ice-300">em vigor desde {formatDayMonth(d.activeGoal.effectiveFrom)}</span>
             )}
           </div>
           {d.activeGoal ? (
-            <MacroRings goal={d.activeGoal} weightKg={d.weight?.current ?? null} />
+            <MacroRings goal={d.activeGoal} weightKg={d.weight?.current.value ?? null} />
           ) : (
             <p className="text-ice-300">Ainda não há metas ativas.</p>
           )}
@@ -95,34 +135,36 @@ async function Painel() {
         <KpiCard
           className="bento__arm"
           label="Braço · média D/E"
-          value={d.arm?.current.value ?? null}
+          value={d.arm?.latest.value ?? null}
           unit="cm"
-          toneKey="armRightCm"
-          previous={d.arm?.previous?.value}
-          first={sinceStart(d.arm)}
+          deltas={slowDeltas(d.arm, "armRightCm")}
           note={
-            d.armSides
-              ? `D ${formatDecimal(d.armSides.right)} · E ${formatDecimal(d.armSides.left)} · diferença ${formatDecimal(Math.abs(d.armSides.right - d.armSides.left))} cm`
-              : undefined
+            <>
+              {slowNote(d.arm)}
+              {d.armSides && (
+                <span className="block">
+                  D {formatDecimal(d.armSides.right)} · E {formatDecimal(d.armSides.left)} · diferença{" "}
+                  {formatDecimal(Math.abs(d.armSides.right - d.armSides.left))} cm
+                </span>
+              )}
+            </>
           }
         />
         <KpiCard
           className="bento__chest"
           label="Peito"
-          value={d.chest?.current.value ?? null}
+          value={d.chest?.latest.value ?? null}
           unit="cm"
-          toneKey="chestCm"
-          previous={d.chest?.previous?.value}
-          first={sinceStart(d.chest)}
+          deltas={slowDeltas(d.chest, "chestCm")}
+          note={slowNote(d.chest)}
         />
         <KpiCard
           className="bento__shoulders"
           label="Ombros"
-          value={d.shoulders?.current.value ?? null}
+          value={d.shoulders?.latest.value ?? null}
           unit="cm"
-          toneKey="shouldersCm"
-          previous={d.shoulders?.previous?.value}
-          first={sinceStart(d.shoulders)}
+          deltas={slowDeltas(d.shoulders, "shouldersCm")}
+          note={slowNote(d.shoulders)}
         />
 
         <Card className="bento__ratio kpi">
@@ -151,14 +193,7 @@ async function Painel() {
               <p className="kpi__value">
                 <span className="num">{fmt2(d.waistHeight)}</span>
               </p>
-              <RatioMeter
-                value={d.waistHeight}
-                min={0.4}
-                max={0.6}
-                mark={WAIST_HEIGHT_HEALTHY}
-                markLabel="limite"
-                goodBelow
-              />
+              <RatioMeter value={d.waistHeight} min={0.4} max={0.6} mark={WAIST_HEIGHT_HEALTHY} markLabel="limite" goodBelow />
               <p className="kpi__note">
                 {d.waistHeight < WAIST_HEIGHT_HEALTHY
                   ? `Zona saudável (abaixo de ${fmt2(WAIST_HEIGHT_HEALTHY)}).`
@@ -170,20 +205,15 @@ async function Painel() {
           )}
         </Card>
 
-        <CheckInCard d={d} />
-        <TodayTraining d={d} />
         <RoutineCard />
       </div>
     </div>
   );
 }
 
-function agoText(days: number): string {
-  return days === 0 ? "feito hoje" : days === 1 ? "feito ontem" : `feito há ${days} dias`;
-}
-
 function CheckInCard({ d }: { d: DashboardData }) {
   const c = d.checkIn;
+  const since = d.due.daysSinceWeekly;
   return (
     <Card className="bento__checkin grid content-start gap-4 p-6">
       <div className="flex items-center justify-between gap-3">
@@ -194,7 +224,9 @@ function CheckInCard({ d }: { d: DashboardData }) {
         c.daysLeft > 0 ? (
           <p>
             <span className="num font-display text-4xl font-medium">{c.daysLeft}</span>{" "}
-            <span className="text-ice-300">{c.daysLeft === 1 ? "dia" : "dias"} · {formatDayMonth(c.date)}</span>
+            <span className="text-ice-300">
+              {c.daysLeft === 1 ? "dia" : "dias"} · {formatDayMonth(c.date)}
+            </span>
           </p>
         ) : (
           <p className="font-display text-xl font-bold text-acid-400">Check-in disponível</p>
@@ -203,23 +235,25 @@ function CheckInCard({ d }: { d: DashboardData }) {
         <p className="text-ice-300">Define uma meta para começar a contagem.</p>
       )}
       <div className="grid gap-2">
-        <p className="text-sm font-medium">Esta semana mede:</p>
+        <p className="text-sm font-medium">Hoje e esta semana:</p>
         <ul className="checklist">
-          <li data-due={d.due.waist}>
-            Cintura
-            <span>{d.due.waist ? "por medir" : agoText(d.due.daysSinceWaist ?? 0)}</span>
-          </li>
-          <li data-due={d.due.arms}>
-            Braços
-            <span>
-              {d.due.arms
-                ? "por medir"
-                : `daqui a ${14 - (d.due.daysSinceArms ?? 0)} dias`}
-            </span>
-          </li>
-          <li data-due="false">
+          <li data-due={!d.due.weightToday}>
             Peso
-            <span>todas as manhãs</span>
+            <span>{d.due.weightToday ? "feito hoje" : "por registar hoje"}</span>
+          </li>
+          <li data-due={!d.due.waistToday}>
+            Cintura
+            <span>{d.due.waistToday ? "feito hoje" : "por medir hoje"}</span>
+          </li>
+          <li data-due={d.due.weekly}>
+            Braço, peito, ombros
+            <span>
+              {d.due.weekly
+                ? "por medir esta semana"
+                : since === 0
+                  ? "feito hoje"
+                  : `feito há ${since} ${since === 1 ? "dia" : "dias"}`}
+            </span>
           </li>
         </ul>
       </div>
@@ -228,8 +262,8 @@ function CheckInCard({ d }: { d: DashboardData }) {
           Ver recomendação <ArrowRight />
         </ButtonLink>
       ) : (
-        <ButtonLink href="/medidas" variant="secondary" className="justify-self-start">
-          Registar medidas <ArrowRight />
+        <ButtonLink href="/registar" variant="secondary" className="justify-self-start">
+          Registar hoje <ArrowRight />
         </ButtonLink>
       )}
     </Card>
@@ -238,14 +272,13 @@ function CheckInCard({ d }: { d: DashboardData }) {
 
 function TodayTraining({ d }: { d: DashboardData }) {
   const t = d.training;
-  const type = t ? TRAINING_TYPES[t.type] : null;
   return (
     <Card className="bento__training grid content-start gap-4 p-6">
       <div className="flex items-center justify-between gap-3">
         <p className="eyebrow">Treino de hoje · {WEEKDAYS[d.weekday]}</p>
         <Dumbbell className="size-5 text-cobalt-300" aria-hidden="true" />
       </div>
-      {t && type ? (
+      {t ? (
         <>
           <div className="flex flex-wrap items-center gap-3">
             <h2 className="text-2xl">{t.title}</h2>
@@ -283,8 +316,8 @@ function TodayTraining({ d }: { d: DashboardData }) {
 
 function RoutineCard() {
   const items = [
-    "Pesar todas as manhãs (a app faz a média)",
-    "Cintura 1× por semana, braços a cada 2 semanas",
+    "Pesar e medir a cintura todas as manhãs (a app faz as médias de 7 dias)",
+    "Braço, peito e ombros 1× por semana",
     "Treino intenso: última série dos isolados até à falha",
     "Creatina todos os dias",
     "Dormir 7 a 9 horas",
@@ -312,7 +345,7 @@ function PainelSkeleton() {
         <Skeleton width={320} height={40} radius={10} />
       </div>
       <div className="bento">
-        {["waist", "weight", "macros", "arm", "chest", "shoulders"].map((k) => (
+        {["waist", "weight", "checkin", "training", "macros", "arm"].map((k) => (
           <Card key={k} className={`bento__${k} grid content-start gap-3 p-6`} spotlight={false}>
             <Skeleton width="40%" height={12} />
             <Skeleton width="60%" height={44} radius={10} />
