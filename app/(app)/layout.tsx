@@ -4,6 +4,7 @@ import { AccountMenu } from "@/components/layout/account-menu";
 import { AppBackground } from "@/components/layout/app-background";
 import { CommandPalette, CommandPaletteTrigger } from "@/components/layout/command-palette";
 import { Dock } from "@/components/layout/dock";
+import { InstallApp } from "@/components/layout/install-app";
 import { LoginReveal } from "@/components/layout/login-reveal";
 import { Providers } from "@/components/layout/providers";
 import { SpotlightLayer } from "@/components/layout/spotlight-layer";
@@ -27,6 +28,7 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
           <Wordmark />
         </Link>
         <div className="app-header__actions">
+          <InstallApp />
           <CommandPaletteTrigger />
           <AccountMenu />
         </div>
